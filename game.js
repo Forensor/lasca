@@ -12,7 +12,7 @@ var board = [
 	0, 0, 0, 0,
 	2, [4, 3, 2, 1], 0,
 	1, 3, 1, 1,
-	1, [1, 2, 2, 1], 1,
+	1, [1, 2, 2, 1], [3, 2],
 	1, 1, 1, 1
 ];
 var coords = [
@@ -32,7 +32,8 @@ function getIndex(arr, search){
 	let index;
 	for(let i = 0; i < arr.length; i++){
 		if(arr[i] == search){
-			index == i;
+			index = i;
+			break;
 		}
 	}
 	return index;
@@ -122,35 +123,127 @@ function renderBoard(){
 	}
 }
 
+function inBoundaries(index, arr){
+
+	//Checks if index is in array or not
+
+    let r;
+    
+    if(index >= 0 && index <= arr.length - 1){
+        r = true;
+    }else{
+        r = false;
+    }
+    return r;
+}
+
+function getTeam(piece){
+
+	//Gets team of piece 1 = white, 2 = black
+
+	let team;
+	if(piece == 1 || piece[0] == 1 || piece == 3 || piece[0] == 3){
+		team = 1;
+	}else if(piece == 2 || piece[0] == 2 || piece == 4 || piece[0] == 4){
+		team = 2;
+	}
+	return team;
+}
+
+function getRole(piece){
+
+	//Returns role of piece 1 = soldier, 2 = officer
+
+	let r;
+	if(piece == 1 || piece == 2 || piece[0] == 1 || piece[0] == 2){
+		r = 1;
+	}else if(piece == 3 || piece == 4 || piece[0] == 3 || piece[0] == 4){
+		r = 2;
+	}
+	return r;
+}
+
 function calcCaptures(){
 
 	//Calculates if there are possible captures
 
 	if(turn == 1){ //White pieces captures
 		for(let i = 0; i < board.length; i++){
-			if(board[i] == 1 || board[i][0] == 1){ //If it's a white piece or a white commanded column
-				if(i == 24 || i == 20 || i == 17 || i == 13 || i == 10){ //If it is on one of the right side checkers
-					if(((board[i - 4] == 2 || board[i - 4][0] == 2) || (board[i - 4] == 4 || board[i - 4][0] == 4)) && board[i - 8] == 0){ //If corner is black or black column or officer column or piece and other side is empty
+			let lufc = board[i - 8]; //LeftUpperFarCorner
+			let rufc = board[i - 6]; //RightUpperFarCorner
+			let luac = board[i - 4]; //LeftUpperAdyacentCorner
+			let ruac = board[i - 3]; //RightUpperAdyacentCorner
+			let ldac = board[i + 3]; //LeftDownAdyacentCorner
+			let rdac = board[i + 4]; //...
+			let ldfc = board[i + 6];
+			let rdfc = board[i + 8];
+			if(getTeam(board[i]) == 1 && getRole(board[i]) == 1){ //If it's a white piece or a white commanded column
+				if(inBoundaries(i - 4, board) && getTeam(luac) == 2){ //If it has a black piece at LeftUpperAdyacentCorner
+					if(inBoundaries(i - 8, board) && lufc == 0){ //If LeftUpperFarCorner is empty
 						posCaptures.push(i);
 					}
-				}else if(i == 21 || i == 18 || i == 14 || i == 11 || i == 7){ //If it is one of the left side checkers
-					if(((board[i - 3] == 2 || board[i - 3][0] == 2) || (board[i - 3] == 4 || board[i - 3][0] == 4)) && board[i - 6] == 0){ //If corner is black or black column or officer or black officer and other side is empty
-						posCaptures.push(i);
-					}
-				}else if(!(i == 0 || i == 1 || i == 2 || i == 3 || i == 4 || i == 5 || i == 6)){ //If not equal of anyone of that checkers
-					if((((board[i - 4] == 2 || board[i - 4][0] == 2) || (board[i - 4] == 4 || board[i - 4][0] == 4)) && board[i - 8] == 0) || (board[i - 6] == 0 && ((board[i - 3] == 2 || board[i - 3][0] == 2) || (board[i - 3] == 4 || board[i - 3][0] == 4)))){ //If anyone of the corners has black piece and the other one is empty
+				}else if(inBoundaries(i - 3, board) && getTeam(ruac) == 2){ //If black piece at ruac
+					if(inBoundaries(i - 6, board) && rufc == 0){ //If rufc empty
 						posCaptures.push(i);
 					}
 				}
-			}else if(board[i] == 3 || board[i][0] == 3){ //If white officer column or piece
-
+			}else if(getTeam(board[i]) == 1 && getRole(board[i]) == 2){ //If it's a white officer piece/column
+				if(inBoundaries(i - 4, board) && getTeam(luac) == 2){ //If it has a black piece at LeftUpperAdyacentCorner
+					if(inBoundaries(i - 8, board) && lufc == 0){ //If LeftUpperFarCorner is empty
+						posCaptures.push(i);
+					}
+				}else if(inBoundaries(i - 3, board) && getTeam(ruac) == 2){ //If black piece at ruac
+					if(inBoundaries(i - 6, board) && rufc == 0){ //If rufc empty...
+						posCaptures.push(i);
+					}
+				}else if(inBoundaries(i + 3, board) && getTeam(ldac) == 2){
+					if(inBoundaries(i + 6, board) && ldfc == 0){
+						posCaptures.push(i);
+					}
+				}else if(inBoundaries(i + 4, board) && getTeam(rdac) == 2){
+					if(inBoundaries(i + 8, board) && rdfc == 0){
+						posCaptures.push(i);
+					}
+				}
 			}
 		}
 	}else if(turn == 2){ //Black pieces captures
 		for(let i = 0; i < board.length; i++){
-			if(board[i] == 0 || board[i] == 4 || board[i] == 7 || board[i] == 11 || board[i] == 14){ //If it is on one of the left side checkers
-				if((board[i + 4] == 1 || board[i + 4][0] == 1) && board[i + 8] == 0){
-
+			let lufc = board[i - 8]; //LeftUpperFarCorner
+			let rufc = board[i - 6]; //RightUpperFarCorner
+			let luac = board[i - 4]; //LeftUpperAdyacentCorner
+			let ruac = board[i - 3]; //RightUpperAdyacentCorner
+			let ldac = board[i + 3]; //LeftDownAdyacentCorner
+			let rdac = board[i + 4]; //...
+			let ldfc = board[i + 6];
+			let rdfc = board[i + 8];
+			if(getTeam(board[i]) == 2 && getRole(board[i]) == 1){
+				if(inBoundaries(i + 4, board) && getTeam(rdac) == 1){
+					if(inBoundaries(i + 8, board) && rdfc == 0){
+						posCaptures.push(i);
+					}
+				}else if(inBoundaries(i + 3, board) && getTeam(ldac) == 1){
+					if(inBoundaries(i + 6, board) && ldfc == 0){
+						posCaptures.push(i);
+					}
+				}
+			}else if(getTeam(board[i]) == 2 && getRole(board[i]) == 2){
+				if(inBoundaries(i - 4, board) && getTeam(luac) == 1){
+					if(inBoundaries(i - 8, board) && lufc == 0){
+						posCaptures.push(i);
+					}
+				}else if(inBoundaries(i - 3, board) && getTeam(ruac) == 1){
+					if(inBoundaries(i - 6, board) && rufc == 0){
+						posCaptures.push(i);
+					}
+				}else if(inBoundaries(i + 3, board) && getTeam(ldac) == 1){
+					if(inBoundaries(i + 6, board) && ldfc == 0){
+						posCaptures.push(i);
+					}
+				}else if(inBoundaries(i + 4, board) && getTeam(rdac) == 1){
+					if(inBoundaries(i + 8, board) && rdfc == 0){
+						posCaptures.push(i);
+					}
 				}
 			}
 		}
@@ -167,12 +260,32 @@ function selection(checker){
 	//Picks checker you clicked and sets var 'selected' with that value
 	
 	let element = document.getElementById(checker); //Sets element as the div in the html
+	let cIndex = getIndex(coords, checker); //Index in array of checker match
 	if(selected == ""){
 		
 		//If nothing selected sets current checker as selected
-		
-		selected = checker;
-		element.setAttribute("style", "background-color: yellow;");
+
+		if(turn == 1){ //White turn selection
+			if(board[cIndex] == 1 || board[cIndex] == 3){ //If it's white piece
+				selected = checker;
+				element.setAttribute("style", "background-color: yellow;");
+			}else if(Array.isArray(board[cIndex])){
+				if(board[cIndex][0] == 1 || board[cIndex][0] == 3){ //If it's white column
+					selected = checker;
+					element.setAttribute("style", "background-color: yellow;");
+				}
+			}
+		}else if(turn == 2){ //Black turn selection
+			if(board[cIndex] == 2 || board[cIndex] == 4){
+				selected = checker;
+				element.setAttribute("style", "background-color: yellow;");
+			}else if(Array.isArray(board[cIndex])){
+				if(board[cIndex][0] == 2 || board[cIndex][0] == 4){
+					selected = checker;
+					element.setAttribute("style", "background-color: yellow;");
+				}
+			}
+		}
 	}else if(selected == checker){
 		
 		//If current checker is the selected, unselects it
@@ -184,4 +297,3 @@ function selection(checker){
 
 //Document load
 renderBoard();
-calcCaptures();
