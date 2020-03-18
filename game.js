@@ -7,13 +7,13 @@ var turn = 1; //1 = white, 2 = black
 //The array that will control game developing
 
 var board = [
-	3, 0, 0, 0,
-	0, 0, 0,
+	0, 0, 0, 0,
+	2, 2, 0,
+	0, 2, [2, 1], 0,
+	0, 1, 1,
 	0, 0, 0, 0,
 	0, 0, 0,
-	0, 0, 0, 0,
-	0, 0, 0,
-	0, 0, 0, 4
+	0, 0, 0, 0
 ];
 var coords = [
 	"a7", "c7", "e7", "g7",
@@ -125,13 +125,14 @@ function renderBoard(){
 			let checker = document.getElementById(coords[i]);
 			checker.innerHTML = "";
 			checker.setAttribute("onclick", "selection('" + coords[i] + "')");
-			checker.setAttribute("style", "background-color: #fff;");
 			checker.className = "c";
 		}
+		let checker = document.getElementById(coords[i]);
+		checker.setAttribute("style", "background-color: #fff;");
 	}
 }
 
-function inBoundaries(index, arr){ //May not be useful... Still considering
+function inBoundaries(index, arr){
 
 	//Checks if index is in array or not
 
@@ -244,29 +245,45 @@ function calcCaptures(){
 			if(getTeam(board[i]) == 1 && getRole(board[i]) == 1){ //If it's a white piece or a white commanded column
 				if(inBoundaries(i - 4, board) && getTeam(luac) == 2 && movesTruthTable(i, -4)){ //If it has a black piece at LeftUpperAdyacentCorner
 					if(inBoundaries(i - 8, board) && lufc == 0 && movesTruthTable(i, -8)){ //If LeftUpperFarCorner is empty
-						posCaptures.push(i);
+						if(!(posCaptures.includes(i))){
+							posCaptures.push(i);
+						}
 					}
-				}else if(inBoundaries(i - 3, board) && getTeam(ruac) == 2 && movesTruthTable(i, -3)){ //If black piece at ruac
+				}
+				if(inBoundaries(i - 3, board) && getTeam(ruac) == 2 && movesTruthTable(i, -3)){ //If black piece at ruac
 					if(inBoundaries(i - 6, board) && rufc == 0 && movesTruthTable(i, -6)){ //If rufc empty
-						posCaptures.push(i);
+						if(!(posCaptures.includes(i))){
+							posCaptures.push(i);
+						}
 					}
 				}
 			}else if(getTeam(board[i]) == 1 && getRole(board[i]) == 2){ //If it's a white officer piece/column
 				if(inBoundaries(i - 4, board) && getTeam(luac) == 2 && movesTruthTable(i, -4)){ //If it has a black piece at LeftUpperAdyacentCorner
 					if(inBoundaries(i - 8, board) && lufc == 0 && movesTruthTable(i, -8)){ //If LeftUpperFarCorner is empty
-						posCaptures.push(i);
+						if(!(posCaptures.includes(i))){
+							posCaptures.push(i);
+						}
 					}
-				}else if(inBoundaries(i - 3, board) && getTeam(ruac) == 2 && movesTruthTable(i, -3)){ //If black piece at ruac
+				}
+				if(inBoundaries(i - 3, board) && getTeam(ruac) == 2 && movesTruthTable(i, -3)){ //If black piece at ruac
 					if(inBoundaries(i - 6, board) && rufc == 0 && movesTruthTable(i, -6)){ //If rufc empty...
-						posCaptures.push(i);
+						if(!(posCaptures.includes(i))){
+							posCaptures.push(i);
+						}
 					}
-				}else if(inBoundaries(i + 3, board) && getTeam(ldac) == 2 && movesTruthTable(i, 3)){
+				}
+				if(inBoundaries(i + 3, board) && getTeam(ldac) == 2 && movesTruthTable(i, 3)){
 					if(inBoundaries(i + 6, board) && ldfc == 0 && movesTruthTable(i, 6)){
-						posCaptures.push(i);
+						if(!(posCaptures.includes(i))){
+							posCaptures.push(i);
+						}
 					}
-				}else if(inBoundaries(i + 4, board) && getTeam(rdac) == 2 && movesTruthTable(i, 4)){
+				}
+				if(inBoundaries(i + 4, board) && getTeam(rdac) == 2 && movesTruthTable(i, 4)){
 					if(inBoundaries(i + 8, board) && rdfc == 0 && movesTruthTable(i, 8)){
-						posCaptures.push(i);
+						if(!(posCaptures.includes(i))){
+							posCaptures.push(i);
+						}
 					}
 				}
 			}
@@ -284,29 +301,45 @@ function calcCaptures(){
 			if(getTeam(board[i]) == 2 && getRole(board[i]) == 1){
 				if(inBoundaries(i + 4, board) && getTeam(rdac) == 1 && movesTruthTable(i, 4)){
 					if(inBoundaries(i + 8, board) && rdfc == 0 && movesTruthTable(i, 8)){
-						posCaptures.push(i);
+						if(!(posCaptures.includes(i))){
+							posCaptures.push(i);
+						}
 					}
-				}else if(inBoundaries(i + 3, board) && getTeam(ldac) == 1 && movesTruthTable(i, 3)){
+				}
+				if(inBoundaries(i + 3, board) && getTeam(ldac) == 1 && movesTruthTable(i, 3)){
 					if(inBoundaries(i + 6, board) && ldfc == 0 && movesTruthTable(i, 6)){
-						posCaptures.push(i);
+						if(!(posCaptures.includes(i))){
+							posCaptures.push(i);
+						}
 					}
 				}
 			}else if(getTeam(board[i]) == 2 && getRole(board[i]) == 2){
 				if(inBoundaries(i - 4, board) && getTeam(luac) == 1 && movesTruthTable(i, -4)){
 					if(inBoundaries(i - 8, board) && lufc == 0 && movesTruthTable(i, -8)){
-						posCaptures.push(i);
+						if(!(posCaptures.includes(i))){
+							posCaptures.push(i);
+						}
 					}
-				}else if(inBoundaries(i - 3, board) && getTeam(ruac) == 1 && movesTruthTable(i, -3)){
+				}
+				if(inBoundaries(i - 3, board) && getTeam(ruac) == 1 && movesTruthTable(i, -3)){
 					if(inBoundaries(i - 6, board) && rufc == 0 && movesTruthTable(i, -6)){
-						posCaptures.push(i);
+						if(!(posCaptures.includes(i))){
+							posCaptures.push(i);
+						}
 					}
-				}else if(inBoundaries(i + 3, board) && getTeam(ldac) == 1 && movesTruthTable(i, 3)){
+				}
+				if(inBoundaries(i + 3, board) && getTeam(ldac) == 1 && movesTruthTable(i, 3)){
 					if(inBoundaries(i + 6, board) && ldfc == 0 && movesTruthTable(i, 6)){
-						posCaptures.push(i);
+						if(!(posCaptures.includes(i))){
+							posCaptures.push(i);
+						}
 					}
-				}else if(inBoundaries(i + 4, board) && getTeam(rdac) == 1 && movesTruthTable(i, 4)){
+				}
+				if(inBoundaries(i + 4, board) && getTeam(rdac) == 1 && movesTruthTable(i, 4)){
 					if(inBoundaries(i + 8, board) && rdfc == 0 && movesTruthTable(i, 8)){
-						posCaptures.push(i);
+						if(!(posCaptures.includes(i))){
+							posCaptures.push(i);
+						}
 					}
 				}
 			}
@@ -355,7 +388,7 @@ function capture(checker){
 			}
 		}else{
 			if(Array.isArray(board[getIndex(coords, selected)])){ //If selected is a column
-				board[getIndex(coords, selected)].push(board[getIndex(coords, selected) - 4][0]);
+				board[getIndex(coords, selected)].push(board[getIndex(coords, selected) - 4]);
 				board[getIndex(coords, selected) - 4] = 0;
 			}else{ //If selected is not a column create column and remove piece from captured
 				board[getIndex(coords, selected)] = [board[getIndex(coords, selected)] ,board[getIndex(coords, selected) - 4]];
@@ -376,7 +409,7 @@ function capture(checker){
 			}
 		}else{
 			if(Array.isArray(board[getIndex(coords, selected)])){ //If selected is a column
-				board[getIndex(coords, selected)].push(board[getIndex(coords, selected) - 3][0]);
+				board[getIndex(coords, selected)].push(board[getIndex(coords, selected) - 3]);
 				board[getIndex(coords, selected) - 3] = 0;
 			}else{ //If selected is not a column create column and remove piece from captured
 				board[getIndex(coords, selected)] = [board[getIndex(coords, selected)] ,board[getIndex(coords, selected) - 3]];
@@ -397,7 +430,7 @@ function capture(checker){
 			}
 		}else{
 			if(Array.isArray(board[getIndex(coords, selected)])){ //If selected is a column
-				board[getIndex(coords, selected)].push(board[getIndex(coords, selected) + 3][0]);
+				board[getIndex(coords, selected)].push(board[getIndex(coords, selected) + 3]);
 				board[getIndex(coords, selected) + 3] = 0;
 			}else{ //If selected is not a column create column and remove piece from captured
 				board[getIndex(coords, selected)] = [board[getIndex(coords, selected)] ,board[getIndex(coords, selected) + 3]];
@@ -418,7 +451,7 @@ function capture(checker){
 			}
 		}else{
 			if(Array.isArray(board[getIndex(coords, selected)])){ //If selected is a column
-				board[getIndex(coords, selected)].push(board[getIndex(coords, selected) + 4][0]);
+				board[getIndex(coords, selected)].push(board[getIndex(coords, selected) + 4]);
 				board[getIndex(coords, selected) + 4] = 0;
 			}else{ //If selected is not a column create column and remove piece from captured
 				board[getIndex(coords, selected)] = [board[getIndex(coords, selected)] ,board[getIndex(coords, selected) + 4]];
