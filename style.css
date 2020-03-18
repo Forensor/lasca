@@ -2,11 +2,27 @@
 	padding: 0px;
 	margin: 0px;
 }
+div#gui{
+	width: 80%;
+	margin: auto;
+	padding: 20px;;
+}
 div.board{
 	border: black solid 1px;
 	margin: auto;
 	width: 630px;
 	height: 630px;
+}
+div#panel{
+	width: 50%;
+	margin: 10px auto 0 auto;
+	text-align: center;
+}
+div#history{
+	width: 50%;
+	margin: 10px auto 0 auto;
+	border: 1px solid black;
+	min-height: 16px;
 }
 div.c{
 	background-color: #fff;
@@ -21,4 +37,7 @@ div.n{
 	float: left;
 	position: relative;
 	z-index: -100;
+}
+div.c div{
+	border-radius: 4px;
 }
