@@ -3,17 +3,18 @@ var posMoves = []; //Where you can move your selected piece
 var posCaptures = []; //Which pieces can capture
 
 var turn = 1; //1 = white, 2 = black
+var nmoves = 1; //The number of moves each one is doing
 
 //The array that will control game developing
 
 var board = [
-	0, 0, 0, 0,
-	2, 2, 0,
-	0, 2, [2, 1], 0,
-	0, 1, 1,
-	0, 0, 0, 0,
+	2, 2, 2, 2,
+	2, 2, 2,
+	2, 2, 2, 2,
 	0, 0, 0,
-	0, 0, 0, 0
+	1, 1, 1, 1,
+	1, 1, 1,
+	1, 1, 1, 1
 ];
 var coords = [
 	"a7", "c7", "e7", "g7",
@@ -39,11 +40,57 @@ function getIndex(arr, search){
 	return index;
 }
 
+function recordMove(orig, dest, tmove = 1){ //Origin piece, destination and type of move 1 = normal move, 2 = capture, 3 = promotion
+
+	//Writes in history the move done
+
+	let history = document.getElementById("history");
+	if(tmove == 1 && turn == 1){
+		history.innerHTML += nmoves.toString() + ". " + coords[orig] + "-" + coords[dest] + " ";
+	}else if(tmove == 1 && turn == 2){
+		history.innerHTML += coords[orig] + "-" + coords[dest] + " ";
+	}else if(tmove == 2 && turn == 1){
+		history.innerHTML += nmoves.toString() + ". " + coords[orig] + "x" + coords[dest] + " ";
+	}else if(tmove == 2 && turn == 2){
+		history.innerHTML += coords[orig] + "x" + coords[dest] + " ";
+	}
+}
+
+function checkStatus(){ //Checks game status, turns, who won etc
+	let status = document.getElementById("status");
+
+	let w = false; //Checks if there are pieces remaining
+	let b = false;
+	for(let i = 0; i < board.length; i++){
+		if(getTeam(board[i]) == 1){
+			w = true;
+			break;
+		}
+	}
+	for(let i = 0; i < board.length; i++){
+		if(getTeam(board[i]) == 2){
+			b = true;
+			break;
+		}
+	}
+	//Check turn or who won
+	if(w && !b){
+		status.innerHTML = "White won";
+		document.getElementById("history").innerHTML += "# White won";
+	}else if(!w && b){
+		status.innerHTML = "Black won";
+		document.getElementById("history").innerHTML += "# Black won";
+	}else if(turn == 1){
+		status.innerHTML = "White turn";
+	}else if(turn == 2){
+		status.innerHTML = "Black turn";
+	}
+}
+
 function setBoard(){
 	
 	//Sets board at starting position and loads it
 	
-	renderBoard();
 	board = [
 		2, 2, 2, 2,
 		2, 2, 2,
@@ -57,7 +104,11 @@ function setBoard(){
 	turn = 1;
 	posMoves = [];
 	posCaptures = [];
+	nmoves = 1;
+	let history = document.getElementById("history");
+	history.innerHTML = "";
 	renderBoard();
+	checkStatus();
 }
 
 function renderBoard(){
@@ -97,25 +148,25 @@ function renderBoard(){
 			for(let j = 0; j < board[i].length; j++){
 				if(board[i][j] == 2){ //Black piece
 					if(j == 0){
-						checker.innerHTML = "<div style='background-color: #000; border: 1px solid #333; width: 48px; height: 8px; margin: 0 auto;'></div>";
+						checker.innerHTML = "<div style='background-color: #000; border: 1px solid #333; width: 48px; height: 18px; margin: 0 auto;'></div>";
 					}else{
 						checker.innerHTML += "<div style='background-color: #000; border: 1px solid #333; width: 48px; height: 8px; margin: 0 auto;'></div>";
 					}
 				}else if(board[i][j] == 1){ //White piece
 					if(j == 0){
-						checker.innerHTML = "<div style='background-color: #fff; border: 1px solid black; width: 48px; height: 8px; margin: 0 auto;'></div>";
+						checker.innerHTML = "<div style='background-color: #fff; border: 1px solid black; width: 48px; height: 18px; margin: 0 auto;'></div>";
 					}else{
 						checker.innerHTML += "<div style='background-color: #fff; border: 1px solid black; width: 48px; height: 8px; margin: 0 auto;'></div>";
 					}
 				}else if(board[i][j] == 3){ //White officer
 					if(j == 0){
-						checker.innerHTML = "<div style='background-color: #fff; border: 1px solid black; width: 48px; height: 8px; margin: 0 auto;'><div style='background-color: #000; width: 5px; height: 5px; margin: auto;'></div></div>";
+						checker.innerHTML = "<div style='background-color: #fff; border: 1px solid black; width: 48px; height: 18px; margin: 0 auto;'><div style='background-color: #000; width: 5px; height: 5px; margin: auto;'></div></div>";
 					}else{
 						checker.innerHTML += "<div style='background-color: #fff; border: 1px solid black; width: 48px; height: 8px; margin: 0 auto;'><div style='background-color: #000; width: 5px; height: 5px; margin: auto;'></div></div>";
 					}
 				}else if(board[i][j] == 4){ //Black officer
 					if(j == 0){
-						checker.innerHTML = "<div style='background-color: #000; border: 1px solid #333; width: 48px; height: 8px; margin: 0 auto;'><div style='background-color: #fff; width: 5px; height: 5px; margin: auto;'></div></div>";
+						checker.innerHTML = "<div style='background-color: #000; border: 1px solid #333; width: 48px; height: 18px; margin: 0 auto;'><div style='background-color: #fff; width: 5px; height: 5px; margin: auto;'></div></div>";
 					}else{
 						checker.innerHTML += "<div style='background-color: #000; border: 1px solid #333; width: 48px; height: 8px; margin: 0 auto;'><div style='background-color: #fff; width: 5px; height: 5px; margin: auto;'></div></div>";
 					}
@@ -124,11 +175,11 @@ function renderBoard(){
 		}else{ //Erases if 0
 			let checker = document.getElementById(coords[i]);
 			checker.innerHTML = "";
-			checker.setAttribute("onclick", "selection('" + coords[i] + "')");
-			checker.className = "c";
 		}
 		let checker = document.getElementById(coords[i]);
 		checker.setAttribute("style", "background-color: #fff;");
+		checker.setAttribute("onclick", "selection('" + coords[i] + "')");
+		checker.className = "c";
 	}
 }
 
@@ -347,12 +398,13 @@ function calcCaptures(){
 	}
 }
 
-function move(checker){
+function move(checker, tmove = 1){ //Type 1 = normal move, 2 = capture, 3 = promotion
 
 	//Moves selected piece at desired location
 
 	let orig = getIndex(coords, selected);
 	let dest = getIndex(coords, checker);
+	recordMove(orig, dest, tmove);
 	let element = document.getElementById(coords[dest]);
 	if(getTeam(board[orig]) == 1 && (dest == 0 || dest == 1 || dest == 2 || dest == 3)){
 		promote(orig);
@@ -370,7 +422,9 @@ function move(checker){
 		turn = 2;
 	}else if(turn == 2){
 		turn = 1;
+		nmoves += 1;
 	}
+	checkStatus();
 	renderBoard();
 	calcCaptures();
 }
@@ -464,7 +518,7 @@ function capture(checker){
 			}
 		}
 	}
-	move(checker);
+	move(checker, 2);
 }
 
 function showMoves(){
@@ -707,4 +761,5 @@ function promote(checker){
 
 //Document load
 renderBoard();
+checkStatus();
 calcCaptures();
