@@ -131,7 +131,7 @@ function renderBoard(){
 	}
 }
 
-function inBoundaries(index, arr){
+function inBoundaries(index, arr){ //May not be useful... Still considering
 
 	//Checks if index is in array or not
 
