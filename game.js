@@ -8,11 +8,11 @@ var turn = 1; //1 = white, 2 = black
 
 var board = [
 	2, 2, 2, 2,
-	4, [2, 1, 1, 2], 2,
-	0, 0, 0, 0,
-	2, [4, 3, 2, 1], 0,
-	1, 3, 1, 1,
-	1, [1, 2, 2, 1], [3, 2],
+	2, 2, 2,
+	4, [2, 1], [4, 1], 2,
+	0, 0, 0,
+	3, [1, 2], [3, 2], 1,
+	1, 1, 1,
 	1, 1, 1, 1
 ];
 var coords = [
@@ -119,6 +119,9 @@ function renderBoard(){
 		}else{ //Erases if 0
 			let checker = document.getElementById(coords[i]);
 			checker.innerHTML = "";
+			checker.setAttribute("onclick", "selection('" + coords[i] + "')");
+			checker.setAttribute("style", "background-color: #fff;");
+			checker.className = "c";
 		}
 	}
 }
@@ -255,6 +258,79 @@ function move(checker){
 	let dest = getIndex(coords, checker);
 }
 
+function showMoves(){
+
+	let checker = getIndex(coords, selected);
+
+	let lufc = board[checker - 8]; //LeftUpperFarCorner
+	let rufc = board[checker - 6]; //RightUpperFarCorner
+	let luac = board[checker - 4]; //LeftUpperAdyacentCorner
+	let ruac = board[checker - 3]; //RightUpperAdyacentCorner
+	let ldac = board[checker + 3]; //LeftDownAdyacentCorner
+	let rdac = board[checker + 4]; //...
+	let ldfc = board[checker + 6];
+	let rdfc = board[checker + 8];
+
+	//Will show which moves are available for selected checker
+
+	if(posCaptures.length == 0){ //If there are no possible captures
+		if(getTeam(board[checker]) == 1 && getRole(board[checker]) == 1){ //If white piece
+			if(inBoundaries(checker - 4, board) && luac == 0){ //luac
+				let element = document.getElementById(coords[checker - 4]);
+				element.setAttribute("onclick", "move('" + coords[checker - 4] + "')");
+				element.setAttribute("style", "background-color: yellow");
+				posMoves.push(checker - 4);
+			}
+			if(inBoundaries(checker - 3, board) && ruac == 0){ //ruac
+				let element = document.getElementById(coords[checker - 3]);
+				element.setAttribute("onclick", "move('" + coords[checker - 3] + "')");
+				element.setAttribute("style", "background-color: yellow");
+				posMoves.push(checker - 3);
+			}
+		}else if(getTeam(board[checker]) == 2 && getRole(board[checker]) == 1){ //If black piece
+			if(inBoundaries(checker + 4, board) && rdac == 0){ //rdac
+				let element = document.getElementById(coords[checker + 4]);
+				element.setAttribute("onclick", "move('" + coords[checker + 4] + "')");
+				element.setAttribute("style", "background-color: yellow");
+				posMoves.push(checker + 4);
+			}
+			if(inBoundaries(checker + 3, board) && ldac == 0){ //ldac
+				let element = document.getElementById(coords[checker + 3]);
+				element.setAttribute("onclick", "move('" + coords[checker + 3] + "')");
+				element.setAttribute("style", "background-color: yellow");
+				posMoves.push(checker + 3);
+			}
+		}else if(getRole(board[checker]) == 2){ //If officer
+			if(inBoundaries(checker - 4, board) && luac == 0){ //luac
+				let element = document.getElementById(coords[checker - 4]);
+				element.setAttribute("onclick", "move('" + coords[checker - 4] + "')");
+				element.setAttribute("style", "background-color: yellow");
+				posMoves.push(checker - 4);
+			}
+			if(inBoundaries(checker - 3, board) && ruac == 0){ //ruac
+				let element = document.getElementById(coords[checker - 3]);
+				element.setAttribute("onclick", "move('" + coords[checker - 3] + "')");
+				element.setAttribute("style", "background-color: yellow");
+				posMoves.push(checker - 3);
+			}
+			if(inBoundaries(checker + 4, board) && rdac == 0){ //rdac
+				let element = document.getElementById(coords[checker + 4]);
+				element.setAttribute("onclick", "move('" + coords[checker + 4] + "')");
+				element.setAttribute("style", "background-color: yellow");
+				posMoves.push(checker + 4);
+			}
+			if(inBoundaries(checker + 3, board) && ldac == 0){ //ldac
+				let element = document.getElementById(coords[checker + 3]);
+				element.setAttribute("onclick", "move('" + coords[checker + 3] + "')");
+				element.setAttribute("style", "background-color: yellow");
+				posMoves.push(checker + 3);
+			}
+		}
+	}else if(posCaptures.includes(checker)){
+
+	}
+}
+
 function selection(checker){
 	
 	//Picks checker you clicked and sets var 'selected' with that value
@@ -266,23 +342,27 @@ function selection(checker){
 		//If nothing selected sets current checker as selected
 
 		if(turn == 1){ //White turn selection
-			if(board[cIndex] == 1 || board[cIndex] == 3){ //If it's white piece
+			if(board[cIndex] == 1 || board[cIndex] == 3){ //If it's white piece/officer
 				selected = checker;
 				element.setAttribute("style", "background-color: yellow;");
+				showMoves();
 			}else if(Array.isArray(board[cIndex])){
-				if(board[cIndex][0] == 1 || board[cIndex][0] == 3){ //If it's white column
+				if(board[cIndex][0] == 1 || board[cIndex][0] == 3){ //If it's white column/officer
 					selected = checker;
 					element.setAttribute("style", "background-color: yellow;");
+					showMoves();
 				}
 			}
 		}else if(turn == 2){ //Black turn selection
 			if(board[cIndex] == 2 || board[cIndex] == 4){
 				selected = checker;
 				element.setAttribute("style", "background-color: yellow;");
+				showMoves();
 			}else if(Array.isArray(board[cIndex])){
 				if(board[cIndex][0] == 2 || board[cIndex][0] == 4){
 					selected = checker;
 					element.setAttribute("style", "background-color: yellow;");
+					showMoves();
 				}
 			}
 		}
@@ -292,8 +372,11 @@ function selection(checker){
 		
 		selected = "";
 		element.setAttribute("style", "background-color: white;");
+		posMoves = [];
+		renderBoard();
 	}
 }
 
 //Document load
 renderBoard();
+calcCaptures();
