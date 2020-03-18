@@ -354,6 +354,11 @@ function move(checker){
 	let orig = getIndex(coords, selected);
 	let dest = getIndex(coords, checker);
 	let element = document.getElementById(coords[dest]);
+	if(getTeam(board[orig]) == 1 && (dest == 0 || dest == 1 || dest == 2 || dest == 3)){
+		promote(orig);
+	}else if(getTeam(board[orig]) == 2 && (dest == 21 || dest == 22 || dest == 23 || dest == 24)){
+		promote(orig);
+	}
 	board[dest] = board[orig];
 	board[orig] = 0;
 	posMoves = [];
@@ -678,6 +683,25 @@ function selection(checker){
 		element.setAttribute("style", "background-color: white;");
 		posMoves = [];
 		renderBoard();
+	}
+}
+
+function promote(checker){
+
+	//Promotes piece or column commander to officer
+
+	if(Array.isArray(board[checker])){
+		if(getTeam(board[checker]) == 1){
+			board[checker][0] = 3;
+		}else if(getTeam(board[checker]) == 2){
+			board[checker][0] = 4;
+		}
+	}else{
+		if(getTeam(board[checker]) == 1){
+			board[checker] = 3;
+		}else if(getTeam(board[checker]) == 2){
+			board[checker] = 4
+		}
 	}
 }
 
