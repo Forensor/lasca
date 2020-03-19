@@ -8,10 +8,11 @@ div#gui{
 	padding: 20px;;
 }
 div.board{
-	border: black solid 1px;
+	border: #bfbfbf solid 5px;
+	border-radius: 5px;
 	margin: auto;
-	width: 630px;
-	height: 630px;
+	width: 595px;
+	height: 595px;
 }
 div#panel{
 	width: 50%;
@@ -26,18 +27,21 @@ div#history{
 }
 div.c{
 	background-color: #fff;
-	width: 90px;
-	height: 90px;
+	width: 85px;
+	height: 85px;
 	float: left;
 }
 div.n{
 	background-color: #e6e6e6;
-	width: 90px;
-	height: 90px;
+	width: 85px;
+	height: 85px;
 	float: left;
 	position: relative;
 	z-index: -100;
 }
 div.c div{
 	border-radius: 4px;
+}
+h1{
+	text-align: center;
 }
