@@ -1,5 +1,7 @@
 # lasca
 
+![The game](https://github.com/Forensor/lasca/blob/master/gameimage.png)
+
 Emanuel Lasker's game done in js.
 
 Main purpose is achieve greater knowledge and having fun. I'm just starting in app-dev world so I use what I know.
