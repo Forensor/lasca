@@ -1,6 +1,7 @@
 var selected = ""; //Will show which one is picked as coords
 var posMoves = []; //Where you can move your selected piece
 var posCaptures = []; //Which pieces can capture
+var justCaptured = false; //Controls if there was just a capture from any team
 
 var turn = 1; //1 = white, 2 = black
 var nmoves = 1; //The number of moves each one is doing
@@ -8,9 +9,9 @@ var nmoves = 1; //The number of moves each one is doing
 //The array that will control game developing
 
 var board = [
-	2, 2, 2, 2,
-	2, 2, 2,
-	2, 2, 2, 2,
+	2, 0, 0, 0,
+	0, 0, 0,
+	1, 1, 0, 0,
 	0, 0, 0,
 	1, 1, 1, 1,
 	1, 1, 1,
@@ -50,10 +51,70 @@ function recordMove(orig, dest, tmove = 1){ //Origin piece, destination and type
 	}else if(tmove == 1 && turn == 2){
 		history.innerHTML += coords[orig] + "-" + coords[dest] + " ";
 	}else if(tmove == 2 && turn == 1){
-		history.innerHTML += nmoves.toString() + ". " + coords[orig] + "x" + coords[dest] + " ";
+		if(!justCaptured){
+			history.innerHTML += nmoves.toString() + ". " + coords[orig] + "x" + coords[dest] + " ";
+		}else{
+			history.innerHTML += coords[orig] + "x" + coords[dest] + " ";
+		}
 	}else if(tmove == 2 && turn == 2){
 		history.innerHTML += coords[orig] + "x" + coords[dest] + " ";
 	}
+}
+
+function canMove(){
+	let r = false;
+	for(let i = 0; i < board.length; i++){
+		let lufc = board[i - 8]; //LeftUpperFarCorner
+		let rufc = board[i - 6]; //RightUpperFarCorner
+		let luac = board[i - 4]; //LeftUpperAdyacentCorner
+		let ruac = board[i - 3]; //RightUpperAdyacentCorner
+		let ldac = board[i + 3]; //LeftDownAdyacentCorner
+		let rdac = board[i + 4]; //...
+		let ldfc = board[i + 6];
+		let rdfc = board[i + 8];
+		if(getTeam(board[i]) == 1 && getRole(board[i]) == 1 && turn == 1){ //If white piece
+			if(inBoundaries(i - 4, board) && luac == 0 && movesTruthTable(i, -4)){ //luac
+				r = true;
+			}
+			if(inBoundaries(i - 3, board) && ruac == 0 && movesTruthTable(i, -3)){ //ruac
+				r = true;
+			}
+		}else if(getTeam(board[i]) == 2 && getRole(board[i]) == 1 && turn == 2){ //If black piece
+			if(inBoundaries(i + 4, board) && rdac == 0 && movesTruthTable(i, 4)){ //rdac
+				r = true;
+			}
+			if(inBoundaries(i + 3, board) && ldac == 0 && movesTruthTable(i, 3)){ //ldac
+				r = true;
+			}
+		}else if(getRole(board[i]) == 2 && getTeam(board[i]) == 1 && turn == 1){ //If officer
+			if(inBoundaries(i - 4, board) && luac == 0 && movesTruthTable(i, -4)){ //luac
+				r = true;
+			}
+			if(inBoundaries(i - 3, board) && ruac == 0 && movesTruthTable(i, -3)){ //ruac
+				r = true;
+			}
+			if(inBoundaries(i + 4, board) && rdac == 0 && movesTruthTable(i, 4)){ //rdac
+				r = true;
+			}
+			if(inBoundaries(i + 3, board) && ldac == 0 && movesTruthTable(i, 3)){ //ldac
+				r = true;
+			}
+		}else if(getRole(board[i]) == 2 && getTeam(board[i]) == 2 && turn == 2){ //If officer
+			if(inBoundaries(i - 4, board) && luac == 0 && movesTruthTable(i, -4)){ //luac
+				r = true;
+			}
+			if(inBoundaries(i - 3, board) && ruac == 0 && movesTruthTable(i, -3)){ //ruac
+				r = true;
+			}
+			if(inBoundaries(i + 4, board) && rdac == 0 && movesTruthTable(i, 4)){ //rdac
+				r = true;
+			}
+			if(inBoundaries(i + 3, board) && ldac == 0 && movesTruthTable(i, 3)){ //ldac
+				r = true;
+			}
+		}
+	}
+	return r;
 }
 
 function checkStatus(){ //Checks game status, turns, who won etc
@@ -77,9 +138,19 @@ function checkStatus(){ //Checks game status, turns, who won etc
 	if(w && !b){
 		status.innerHTML = "White won";
 		document.getElementById("history").innerHTML += "# White won";
+		turn = 0;
 	}else if(!w && b){
 		status.innerHTML = "Black won";
 		document.getElementById("history").innerHTML += "# Black won";
+		turn = 0;
+	}else if(canMove() == false && turn == 1){
+		status.innerHTML = "Black won";
+		document.getElementById("history").innerHTML += "# White can't move. Black won";
+		turn = 0;
+	}else if(canMove() == false && turn == 2){
+		status.innerHTML = "White won";
+		document.getElementById("history").innerHTML += "# Black can't move. White won";
+		turn = 0;
 	}else if(turn == 1){
 		status.innerHTML = "White turn";
 	}else if(turn == 2){
@@ -398,49 +469,176 @@ function calcCaptures(){
 	}
 }
 
-function move(checker, tmove = 1){ //Type 1 = normal move, 2 = capture, 3 = promotion
+function furtherCaptures(checker, captured){
+	if(turn == 1){ //White pieces captures
+		let lufc = board[checker - 8]; //LeftUpperFarCorner
+		let rufc = board[checker - 6]; //RightUpperFarCorner
+		let luac = board[checker - 4]; //LeftUpperAdyacentCorner
+		let ruac = board[checker - 3]; //RightUpperAdyacentCorner
+		let ldac = board[checker + 3]; //LeftDownAdyacentCorner
+		let rdac = board[checker + 4]; //...
+		let ldfc = board[checker + 6];
+		let rdfc = board[checker + 8];
+		if(getTeam(board[checker]) == 1 && getRole(board[checker]) == 1){ //If it's a white piece or a white commanded column
+			if(inBoundaries(checker - 4, board) && getTeam(luac) == 2 && movesTruthTable(checker, -4) && (checker - 4) != captured){ //If it has a black piece at LeftUpperAdyacentCorner
+				if(inBoundaries(checker - 8, board) && lufc == 0 && movesTruthTable(checker, -8)){ //If LeftUpperFarCorner is empty
+					if(!(posCaptures.includes(checker))){
+						posCaptures.push(checker);
+					}
+				}
+			}
+			if(inBoundaries(checker - 3, board) && getTeam(ruac) == 2 && movesTruthTable(checker, -3) && (checker - 3) != captured){ //If black piece at ruac
+				if(inBoundaries(checker - 6, board) && rufc == 0 && movesTruthTable(checker, -6)){ //If rufc empty
+					if(!(posCaptures.includes(checker))){
+						posCaptures.push(checker);
+					}
+				}
+			}
+		}else if(getTeam(board[checker]) == 1 && getRole(board[checker]) == 2){ //If it's a white officer piece/column
+			if(inBoundaries(checker - 4, board) && getTeam(luac) == 2 && movesTruthTable(checker, -4) && (checker - 4) != captured){ //If it has a black piece at LeftUpperAdyacentCorner
+				if(inBoundaries(checker - 8, board) && lufc == 0 && movesTruthTable(checker, -8)){ //If LeftUpperFarCorner is empty
+					if(!(posCaptures.includes(checker))){
+						posCaptures.push(checker);
+					}
+				}
+			}
+			if(inBoundaries(checker - 3, board) && getTeam(ruac) == 2 && movesTruthTable(checker, -3) && (checker - 3) != captured){ //If black piece at ruac
+				if(inBoundaries(checker - 6, board) && rufc == 0 && movesTruthTable(checker, -6)){ //If rufc empty...
+					if(!(posCaptures.includes(checker))){
+						posCaptures.push(checker);
+					}
+				}
+			}
+			if(inBoundaries(checker + 3, board) && getTeam(ldac) == 2 && movesTruthTable(checker, 3) && (checker + 3) != captured){
+				if(inBoundaries(checker + 6, board) && ldfc == 0 && movesTruthTable(checker, 6)){
+					if(!(posCaptures.includes(checker))){
+						posCaptures.push(checker);
+					}
+				}
+			}
+			if(inBoundaries(checker + 4, board) && getTeam(rdac) == 2 && movesTruthTable(checker, 4) && (checker + 4) != captured){
+				if(inBoundaries(checker + 8, board) && rdfc == 0 && movesTruthTable(checker, 8)){
+					if(!(posCaptures.includes(checker))){
+						posCaptures.push(checker);
+					}
+				}
+			}
+		}
+	}else if(turn == 2){ //Black pieces captures
+		let lufc = board[checker - 8]; //LeftUpperFarCorner
+		let rufc = board[checker - 6]; //RightUpperFarCorner
+		let luac = board[checker - 4]; //LeftUpperAdyacentCorner
+		let ruac = board[checker - 3]; //RightUpperAdyacentCorner
+		let ldac = board[checker + 3]; //LeftDownAdyacentCorner
+		let rdac = board[checker + 4]; //...
+		let ldfc = board[checker + 6];
+		let rdfc = board[checker + 8];
+		if(getTeam(board[checker]) == 2 && getRole(board[checker]) == 1){
+			if(inBoundaries(checker + 4, board) && getTeam(rdac) == 1 && movesTruthTable(checker, 4) && (checker + 4) != captured){
+				if(inBoundaries(checker + 8, board) && rdfc == 0 && movesTruthTable(checker, 8)){
+					if(!(posCaptures.includes(checker))){
+						posCaptures.push(checker);
+					}
+				}
+			}
+			if(inBoundaries(checker + 3, board) && getTeam(ldac) == 1 && movesTruthTable(checker, 3) && (checker + 3) != captured){
+				if(inBoundaries(checker + 6, board) && ldfc == 0 && movesTruthTable(checker, 6)){
+					if(!(posCaptures.includes(checker))){
+						posCaptures.push(checker);
+					}
+				}
+			}
+		}else if(getTeam(board[checker]) == 2 && getRole(board[checker]) == 2){
+			if(inBoundaries(checker - 4, board) && getTeam(luac) == 1 && movesTruthTable(checker, -4) && (checker - 4) != captured){
+				if(inBoundaries(checker - 8, board) && lufc == 0 && movesTruthTable(checker, -8)){
+					if(!(posCaptures.includes(checker))){
+						posCaptures.push(checker);
+					}
+				}
+			}
+			if(inBoundaries(checker - 3, board) && getTeam(ruac) == 1 && movesTruthTable(checker, -3) && (checker - 3) != captured){
+				if(inBoundaries(checker - 6, board) && rufc == 0 && movesTruthTable(checker, -6)){
+					if(!(posCaptures.includes(checker))){
+						posCaptures.push(checker);
+					}
+				}
+			}
+			if(inBoundaries(checker + 3, board) && getTeam(ldac) == 1 && movesTruthTable(checker, 3) && (checker + 3) != captured){
+				if(inBoundaries(checker + 6, board) && ldfc == 0 && movesTruthTable(checker, 6)){
+					if(!(posCaptures.includes(checker))){
+						posCaptures.push(checker);
+					}
+				}
+			}
+			if(inBoundaries(checker + 4, board) && getTeam(rdac) == 1 && movesTruthTable(checker, 4) && (checker + 4) != captured){
+				if(inBoundaries(checker + 8, board) && rdfc == 0 && movesTruthTable(checker, 8)){
+					if(!(posCaptures.includes(checker))){
+						posCaptures.push(checker);
+					}
+				}
+			}
+		}
+	}
+}
+
+function move(checker, tmove = 1, capt = 50){ //Type 1 = normal move, 2 = capture, 3 = promotion, if a piece was captured and which it was 50 = no captured
 
 	//Moves selected piece at desired location
 
 	let orig = getIndex(coords, selected);
 	let dest = getIndex(coords, checker);
-	recordMove(orig, dest, tmove);
 	let element = document.getElementById(coords[dest]);
-	if(getTeam(board[orig]) == 1 && (dest == 0 || dest == 1 || dest == 2 || dest == 3)){
-		promote(orig);
-	}else if(getTeam(board[orig]) == 2 && (dest == 21 || dest == 22 || dest == 23 || dest == 24)){
-		promote(orig);
-	}
 	board[dest] = board[orig];
 	board[orig] = 0;
 	posMoves = [];
 	posCaptures = [];
 	selected = "";
-	element.setAttribute("onclick", "selection('" + coords[dest] + "')");
-	element.setAttribute("style", "background-color: white;");
-	if(turn == 1){
-		turn = 2;
-	}else if(turn == 2){
-		turn = 1;
-		nmoves += 1;
+	recordMove(orig, dest, tmove);
+	if(getTeam(board[dest]) == 1 && (dest == 0 || dest == 1 || dest == 2 || dest == 3)){
+		promote(dest);
+	}else if(getTeam(board[dest]) == 2 && (dest == 21 || dest == 22 || dest == 23 || dest == 24)){
+		promote(dest);
 	}
-	checkStatus();
-	renderBoard();
-	calcCaptures();
+	if(tmove == 2){
+		justCaptured = true;
+		furtherCaptures(dest, capt);
+	}
+	if(posCaptures.length == 0){
+		element.setAttribute("onclick", "selection('" + coords[dest] + "')");
+		element.setAttribute("style", "background-color: white;");
+		justCaptured = false;
+		if(turn == 1){
+			turn = 2;
+		}else if(turn == 2){
+			turn = 1;
+			nmoves += 1;
+		}
+		checkStatus();
+		renderBoard();
+		calcCaptures();
+	}else{
+		element.setAttribute("onclick", "selection('" + coords[dest] + "')");
+		element.setAttribute("style", "background-color: white;");
+		justCaptured = true;
+		checkStatus();
+		renderBoard();
+	}
 }
 
 function capture(checker){
 
 	//Captures a piece from adyacent corner
-
+	let captured;
 	if(getIndex(coords, selected) - 8 == getIndex(coords, checker)){
 		if(Array.isArray(board[getIndex(coords, selected) - 4])){ //If captured piece is an array add piece to your column and remove from captured
 			if(Array.isArray(board[getIndex(coords, selected)])){
 				board[getIndex(coords, selected)].push(board[getIndex(coords, selected) - 4][0]);
 				board[getIndex(coords, selected) - 4].shift();
+				captured = getIndex(coords, selected) - 4;
 			}else{ //If selected is not a column create column and remove piece from captured
 				board[getIndex(coords, selected)] = [board[getIndex(coords, selected)] ,board[getIndex(coords, selected) - 4][0]];
 				board[getIndex(coords, selected) - 4].shift();
+				captured = getIndex(coords, selected) - 4;
 			}
 			if(board[getIndex(coords, selected) - 4].length <= 1){ //If length of captured column is less or equal than 1 set to piece
 				board[getIndex(coords, selected) - 4] = board[getIndex(coords, selected) - 4][0];
@@ -449,9 +647,11 @@ function capture(checker){
 			if(Array.isArray(board[getIndex(coords, selected)])){ //If selected is a column
 				board[getIndex(coords, selected)].push(board[getIndex(coords, selected) - 4]);
 				board[getIndex(coords, selected) - 4] = 0;
+				captured = getIndex(coords, selected) - 4;
 			}else{ //If selected is not a column create column and remove piece from captured
 				board[getIndex(coords, selected)] = [board[getIndex(coords, selected)] ,board[getIndex(coords, selected) - 4]];
 				board[getIndex(coords, selected) - 4] = 0;
+				captured = getIndex(coords, selected) - 4;
 			}
 		}
 	}else if(getIndex(coords, selected) - 6 == getIndex(coords, checker)){
@@ -459,9 +659,11 @@ function capture(checker){
 			if(Array.isArray(board[getIndex(coords, selected)])){
 				board[getIndex(coords, selected)].push(board[getIndex(coords, selected) - 3][0]);
 				board[getIndex(coords, selected) - 3].shift();
+				captured = getIndex(coords, selected) - 3;
 			}else{ //If selected is not a column create column and remove piece from captured
 				board[getIndex(coords, selected)] = [board[getIndex(coords, selected)] ,board[getIndex(coords, selected) - 3][0]];
 				board[getIndex(coords, selected) - 3].shift();
+				captured = getIndex(coords, selected) - 3;
 			}
 			if(board[getIndex(coords, selected) - 3].length <= 1){ //If length of captured column is less or equal than 1 set to piece
 				board[getIndex(coords, selected) - 3] = board[getIndex(coords, selected) - 3][0];
@@ -470,9 +672,11 @@ function capture(checker){
 			if(Array.isArray(board[getIndex(coords, selected)])){ //If selected is a column
 				board[getIndex(coords, selected)].push(board[getIndex(coords, selected) - 3]);
 				board[getIndex(coords, selected) - 3] = 0;
+				captured = getIndex(coords, selected) - 3;
 			}else{ //If selected is not a column create column and remove piece from captured
 				board[getIndex(coords, selected)] = [board[getIndex(coords, selected)] ,board[getIndex(coords, selected) - 3]];
 				board[getIndex(coords, selected) - 3] = 0;
+				captured = getIndex(coords, selected) - 3;
 			}
 		}
 	}else if(getIndex(coords, selected) + 6 == getIndex(coords, checker)){
@@ -480,9 +684,11 @@ function capture(checker){
 			if(Array.isArray(board[getIndex(coords, selected)])){
 				board[getIndex(coords, selected)].push(board[getIndex(coords, selected) + 3][0]);
 				board[getIndex(coords, selected) + 3].shift();
+				captured = getIndex(coords, selected) + 3;
 			}else{ //If selected is not a column create column and remove piece from captured
 				board[getIndex(coords, selected)] = [board[getIndex(coords, selected)] ,board[getIndex(coords, selected) + 3][0]];
 				board[getIndex(coords, selected) + 3].shift();
+				captured = getIndex(coords, selected) + 3;
 			}
 			if(board[getIndex(coords, selected) + 3].length <= 1){ //If length of captured column is less or equal than 1 set to piece
 				board[getIndex(coords, selected) + 3] = board[getIndex(coords, selected) + 3][0];
@@ -491,9 +697,11 @@ function capture(checker){
 			if(Array.isArray(board[getIndex(coords, selected)])){ //If selected is a column
 				board[getIndex(coords, selected)].push(board[getIndex(coords, selected) + 3]);
 				board[getIndex(coords, selected) + 3] = 0;
+				captured = getIndex(coords, selected) + 3;
 			}else{ //If selected is not a column create column and remove piece from captured
 				board[getIndex(coords, selected)] = [board[getIndex(coords, selected)] ,board[getIndex(coords, selected) + 3]];
 				board[getIndex(coords, selected) + 3] = 0;
+				captured = getIndex(coords, selected) + 3;
 			}
 		}
 	}else if(getIndex(coords, selected) + 8 == getIndex(coords, checker)){
@@ -501,9 +709,11 @@ function capture(checker){
 			if(Array.isArray(board[getIndex(coords, selected)])){
 				board[getIndex(coords, selected)].push(board[getIndex(coords, selected) + 4][0]);
 				board[getIndex(coords, selected) + 4].shift();
+				captured = getIndex(coords, selected) + 4;
 			}else{ //If selected is not a column create column and remove piece from captured
 				board[getIndex(coords, selected)] = [board[getIndex(coords, selected)] ,board[getIndex(coords, selected) + 4][0]];
 				board[getIndex(coords, selected) + 4].shift();
+				captured = getIndex(coords, selected) + 4;
 			}
 			if(board[getIndex(coords, selected) + 4].length <= 1){ //If length of captured column is less or equal than 1 set to piece
 				board[getIndex(coords, selected) + 4] = board[getIndex(coords, selected) + 4][0];
@@ -512,13 +722,15 @@ function capture(checker){
 			if(Array.isArray(board[getIndex(coords, selected)])){ //If selected is a column
 				board[getIndex(coords, selected)].push(board[getIndex(coords, selected) + 4]);
 				board[getIndex(coords, selected) + 4] = 0;
+				captured = getIndex(coords, selected) + 4;
 			}else{ //If selected is not a column create column and remove piece from captured
 				board[getIndex(coords, selected)] = [board[getIndex(coords, selected)] ,board[getIndex(coords, selected) + 4]];
 				board[getIndex(coords, selected) + 4] = 0;
+				captured = getIndex(coords, selected) + 4;
 			}
 		}
 	}
-	move(checker, 2);
+	move(checker, 2, captured);
 }
 
 function showMoves(){
@@ -694,6 +906,20 @@ function showMoves(){
 	}
 }
 
+function resign (){
+	if(turn == 1){
+		document.getElementById("status").innerHTML = "Black won";
+		document.getElementById("history").innerHTML += "# White resigned. Black won";
+		turn = 0;
+	}else if(turn == 2){
+		document.getElementById("status").innerHTML = "White won";
+		document.getElementById("history").innerHTML += "# Black resigned. White won";
+		turn = 0;
+	}else{
+
+	}
+}
+
 function selection(checker){
 	
 	//Picks checker you clicked and sets var 'selected' with that value
@@ -737,6 +963,11 @@ function selection(checker){
 		element.setAttribute("style", "background-color: white;");
 		posMoves = [];
 		renderBoard();
+	}else{
+		selected = "";
+		element.setAttribute("style", "background-color: white;");
+		posMoves = [];
+		renderBoard();
 	}
 }
 
@@ -757,6 +988,7 @@ function promote(checker){
 			board[checker] = 4
 		}
 	}
+	document.getElementById("history").innerHTML += "* ";
 }
 
 //Document load
