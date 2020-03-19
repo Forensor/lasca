@@ -1,3 +1,5 @@
+GAME 1
+
 1.c3-b4 a5xc3 2.d2xb4 e5-d4 3.c3xe5 f6xd4 4.b4-a5 e5-f4 5.g3xe5 d6xf4 
 6.e1-d2 e7-d6 7.d2-c3 f4xd2 8.c1xe3 c5-b4 9.a3xc5 d6xb4 10.b2-a3 d4xb2 
 11.a1xc3 g7-f6 12.f2-g3 e5-d4 13.c3xe5 f6xd4 14.b2-c3 d4xb2 15.g1-f2 b2-c1 
@@ -5,3 +7,10 @@
 21.e3xc5 g5xe3 22.f6-g7 b6xd4 23.a5-b6 c7xa5 24.c5-d6 f4-e5 25.d6-e7 d4-c3 
 26.a3-b4 c3-b2 27.b4-c5 b6xd4 28.e7-d6 e5xc7 29.g7-f6 c7xe5 30.f6-g5 e3-f2 
 31.g5-f6 e5xg7# White won (panditafc - forensor)
+
+GAME 2
+
+1. e3-d4 c5xe3 2. f2xd4 g5-f4 3. e3xg5 e5-f4 4. g3xe5 d6xf4 5. a3-b4 e7-d6 
+6. g5xe7 * f4-e3 7. d2xf4 e5xg3 8. e3xg5 d6-e5 9. d4xf6 g7xe5 10. e7-d6 e5-d4 
+11. c3xe5 a5xc3 12. g5xe7 * b6-c5 13. d4xb6 a7xc5 14. e7xg5 c5-d4 15. c1-d2 b6-a5 
+16. d2xb4 g3-f2 17. g1xe3 c7-b6 18. e3xc5# Black can't move. White won
