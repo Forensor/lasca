@@ -1,6 +1,6 @@
 # lasca
 
-<p align="center"><img src="https://github.com/Forensor/lasca/blob/master/gameimage.png"></p>
+<p align="center"><img src="https://github.com/Forensor/lasca/blob/master/sample.png" border="5" style="border-radius: 5px;"></p>
 
 Emanuel Lasker's game done in js.
 
