@@ -27,8 +27,8 @@ const replace = ([x, ...xs], pos, rep) =>
  * Returns the found element in a 2D list
  * 
  * @param {any[][]} arr 2D array filled with elements
- * @param {number} row Desired row to work with
- * @param {number} col Desired column
+ * @param {number}  row Desired row to work with
+ * @param {number}  col Desired column
  * 
  * @returns {any}
  */
@@ -38,9 +38,9 @@ const find2D = (arr, row, col) =>
  * Replaces an element in a 2D list
  * 
  * @param {any[][]} arr 2D array to be replaced
- * @param {number} row Row to replace
- * @param {number} col Column to replace
- * @param {any} rep Replacement
+ * @param {number}  row Row to replace
+ * @param {number}  col Column to replace
+ * @param {any}     rep Replacement
  */
 const replace2D = (arr, row, col, rep) => 
   replace(arr, row, replace(find(arr, row), col, rep))
