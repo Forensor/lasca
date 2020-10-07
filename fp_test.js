@@ -44,3 +44,17 @@ const find2D = (arr, row, col) =>
  */
 const replace2D = (arr, row, col, rep) => 
   replace(arr, row, replace(find(arr, row), col, rep))
+/**
+ * Returns a new list with a '' in its original place and the
+ * old element being in the destination
+ * 
+ * @param {any[][]} arr 2D array to modify
+ * @param {number}   oR Origin row
+ * @param {number}   oC Origin column
+ * @param {number}   dR Destination row
+ * @param {number}   dC Destination column
+ * 
+ * @returns {any[][]}
+ */
+const move = (arr, oR, oC, dR, dC) => 
+  replace2D(replace2D(arr, dR, dC, find2D(arr, oR, oC)), oR, oC, '')
