@@ -41,9 +41,23 @@ const find2D = (arr, row, col) =>
  * @param {number}  row Row to replace
  * @param {number}  col Column to replace
  * @param {any}     rep Replacement
+ * 
+ * @returns {any[][]}
  */
 const replace2D = (arr, row, col, rep) => 
   replace(arr, row, replace(find(arr, row), col, rep))
+/**
+ * Returns the specified string index inside a list
+ * 
+ * @param {string[][][]} arr 2D array filled with strings
+ * @param {number}       row Row
+ * @param {number}       col Column
+ * @param {number}       pos Index of the string
+ * 
+ * @returns
+ */
+const find3D = (arr, row, col, pos) => 
+  find(find2D(arr, row, col), pos)
 /**
  * Returns a new list with a '' in its original place and the
  * old element being in the destination
