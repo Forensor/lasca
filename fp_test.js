@@ -72,3 +72,21 @@ const find3D = (arr, row, col, pos) =>
  */
 const move = (arr, oR, oC, dR, dC) => 
   replace2D(replace2D(arr, dR, dC, find2D(arr, oR, oC)), oR, oC, '')
+/**
+ * Adds the top piece on the specified place to the piece that captures
+ * 
+ * @param {string[][]} arr Board
+ * @param {number} oR Row in which captured piece is located
+ * @param {number} oC Col in which captured piece is located
+ * @param {number} dR Row of capturing piece
+ * @param {number} dC Col of capturing piece
+ * 
+ * @returns {string[][]}
+ */
+const addTopPieceToPile = (arr, oR, oC, dR, dC) => 
+  replace2D(
+    arr, 
+    dR, 
+    dC, 
+    find2D(arr, dR, dC).concat(find3D(arr, oR, oC, 0))
+  )
