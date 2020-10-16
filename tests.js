@@ -11,5 +11,5 @@ console.log('findPiece: ' + unitTest(findPiece(testArray, 0, 1), 'bb'));
 console.log('replacePiece: ' + unitTest(replacePiece(testArray, 0, 1, 'aa'), [['b', 'aa', 'bbb'], ['', '', ''], ['w', 'ww', 'www']]));
 console.log('findPieceInPile: ' + unitTest(findPieceInPile(testArray, 0, 1, 0), 'b'));
 console.log('addTopPieceToPile: ' + unitTest(addTopPieceToPile(testArray, 0, 1, 2, 1), [['b', 'bb', 'bbb'], ['', '', ''], ['w', 'wwb', 'www']]));
-console.log('findPiece: ' + unitTest(findPiece(testArray, 0, 1), 'bb'));
+console.log('removeTopPiece: ' + unitTest(removeTopPiece([['a', 'aa'], ['b', 'b']], 0, 1), [['a', 'a'], ['b', 'b']]));
 console.log('findPiece: ' + unitTest(findPiece(testArray, 0, 1), 'bb'));
