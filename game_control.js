@@ -12,14 +12,26 @@ const replaceElementInPosition = ([x, ...xs], position, replacement) => {
   if (position > 0) {
     return [x].concat(replaceElementInPosition(xs, position - 1, replacement));
   }
+  
+  return replacement.concat(xs);
+};
 
-  return [replacement].concat(xs);
+const replaceCharInPosition = ([x, ...xs], position, replacement) => {
+  // TODO: this returns an array instead of a string
+
+  if (position > 0) {
+    return [x].concat(replaceCharInPosition(xs, position - 1, replacement));
+  }
+
+  return [replacement].concat(xs).join('');
 };
 
 // Non playable piece-related functions
 
 const findPiece = (board, row, col) => {
-  return findElementInPosition(findElementInPosition(board, row), col);
+  const rowArray = findElementInPosition(board, row);
+
+  return findElementInPosition(rowArray, col);
 };
 
 const replacePiece = (board, row, col, replacement) => {
@@ -41,6 +53,10 @@ const addTopPieceToPile = (board, origRow, origCol, destRow, destCol) => {
     destCol, 
     findPiece(board, destRow, destCol).concat(findPieceInPile(board, origRow, origCol, 0))
   );
+};
+
+const removeTopPiece = (board, row, col) => {
+  replacePiece(board, row, col, replaceCharInPosition(findPiece(board, row, col), 0, ''));
 };
 
 // Piece movements functions (final result)
