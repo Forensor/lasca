@@ -48,21 +48,34 @@ const findPieceInPile = (board, row, col, position) => {
 const addTopPieceToPile = (board, origRow, origCol, destRow, destCol) => {
   const topPieceOfCaptured = findPieceInPile(board, origRow, origCol, 0);
   const pile = findPiece(board, destRow, destCol);
+  const replacement = pile.concat(topPieceOfCaptured);
 
-  return replacePiece(board, destRow, destCol, pile.concat(topPieceOfCaptured));
+  return replacePiece(board, destRow, destCol, replacement);
 };
 
 const removeTopPiece = (board, row, col) => {
-  replacePiece(board, row, col, replaceCharInPosition(findPiece(board, row, col), 0, ''));
+  const piece = findPiece(board, row, col);
+  const pieceWithoutTop = replaceCharInPosition(piece, 0, '');
+
+  return replacePiece(board, row, col, pieceWithoutTop);
 };
 
 // Piece movements functions (final result)
 
 const move = (board, origRow, origCol, destRow, destCol) => {
-  return replacePiece(
-    replacePiece(board, destRow, destCol, findPiece(board, origRow, origCol)), 
-    origRow, 
-    origCol, 
-    ''
+  const origPiece = findPiece(board, origRow, origCol);
+  const boardWithMovedPiece = replacePiece(board, destRow, destCol, origPiece);
+  
+  return replacePiece(boardWithMovedPiece, origRow, origCol, '');
+};
+
+const capture = (board, origRow, origCol, captRow, captCol, destRow, destCol) => {
+  const boardWithTopPiecePassed = addTopPieceToPile(board, captRow, captCol, origCol, origRow);
+  const boardWithTopPieceRemovedInCaptured = removeTopPiece(
+    boardWithTopPiecePassed, 
+    captRow, 
+    captCol
   );
+  
+  return move(boardWithTopPieceRemovedInCaptured, origRow, origCol, destRow, destCol);
 };
