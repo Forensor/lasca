@@ -21,7 +21,7 @@ const replaceCharInPosition = ([x, ...xs], position, replacement) => {
     return x + replaceCharInPosition(xs, position - 1, replacement);
   }
 
-  return replacement + xs.join('');
+  return `${replacement}${xs.join('')}`;
 };
 
 // Non playable piece-related functions
@@ -76,6 +76,30 @@ const capture = (board, origRow, origCol, captRow, captCol, destRow, destCol) =>
     captRow, 
     captCol
   );
-  
+
   return move(boardWithTopPieceRemovedInCaptured, origRow, origCol, destRow, destCol);
+};
+
+// TO ORDER FUNCTIONS
+
+const promote = (board) => {
+  const seventhRow = findElementInPosition(board, 0);
+  const firstRow = findElementInPosition(board, 6);
+  const promotedSeventh = seventhRow.map(
+    ele => findElementInPosition(ele, 0) === 'w' ? replaceCharInPosition(ele, 0, 'W') : ele
+  );
+  const promotedFirst = firstRow.map(
+    ele => findElementInPosition(ele, 0) === 'b' ? replaceCharInPosition(ele, 0, 'B') : ele
+  );
+  const seventhReplaced = replaceElementInPosition(board, 0, promotedSeventh);
+  
+  return replaceElementInPosition(seventhReplaced, 6, promotedFirst);
+};
+
+const resign = (turn) => {
+  // TODO
+};
+
+const record = (history, aggregate) => {
+  return `${history} ${aggregate}`;
 };
