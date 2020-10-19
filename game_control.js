@@ -104,10 +104,18 @@ const record = (history, aggregate) => {
   return `${history} ${aggregate}`;
 };
 
-const getTeam = (piece) => {
-  if (piece.toUpperCase() === 'W') {
+const getTeam = ([x, ...xs]) => {
+  if (x.toUpperCase() === 'W') {
     return 1;
   }
 
+  return 2;
+};
+
+const getRole = ([x, ...xs]) => {
+  if (x === 'w' || x === 'b') {
+    return 1;
+  }
+  
   return 2;
 };
