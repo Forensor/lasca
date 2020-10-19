@@ -103,3 +103,11 @@ const resign = (turn) => {
 const record = (history, aggregate) => {
   return `${history} ${aggregate}`;
 };
+
+const getTeam = (piece) => {
+  if (piece.toUpperCase() === 'W') {
+    return 1;
+  }
+
+  return 2;
+};
