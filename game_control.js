@@ -129,14 +129,10 @@ const inRange = (row, col) => {
   return false;
 };
 
-const calcCaptures = (board) => {
+const calcCaptures = (board, turn) => {
   // TODO
+};
 
-  const possibleCaptures = board.map((row) => {
-    row.map((piece) => {
-      return piece;
-    });
-  });
-
-  return possibleCaptures;
+const calcMoves = () => {
+  // TODO
 };
