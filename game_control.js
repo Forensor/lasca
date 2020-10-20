@@ -1,3 +1,4 @@
+'use strict';
 // General array processing functions
 
 const findElementInPosition = ([x, ...xs], position) => {
@@ -86,10 +87,10 @@ const promote = (board) => {
   const seventhRow = findElementInPosition(board, 0);
   const firstRow = findElementInPosition(board, 6);
   const promotedSeventh = seventhRow.map(
-    ele => findElementInPosition(ele, 0) === 'w' ? replaceCharInPosition(ele, 0, 'W') : ele
+    (ele) => findElementInPosition(ele, 0) === 'w' ? replaceCharInPosition(ele, 0, 'W') : ele
   );
   const promotedFirst = firstRow.map(
-    ele => findElementInPosition(ele, 0) === 'b' ? replaceCharInPosition(ele, 0, 'B') : ele
+    (ele) => findElementInPosition(ele, 0) === 'b' ? replaceCharInPosition(ele, 0, 'B') : ele
   );
   const seventhReplaced = replaceElementInPosition(board, 0, promotedSeventh);
   
@@ -104,7 +105,7 @@ const record = (history, aggregate) => {
   return `${history} ${aggregate}`;
 };
 
-const getTeam = ([x, ...xs]) => {
+const getTeam = ([x, _]) => {
   if (x.toUpperCase() === 'W') {
     return 1;
   }
@@ -112,10 +113,30 @@ const getTeam = ([x, ...xs]) => {
   return 2;
 };
 
-const getRole = ([x, ...xs]) => {
+const getRole = ([x, _]) => {
   if (x === 'w' || x === 'b') {
     return 1;
   }
   
   return 2;
+};
+
+const inRange = (row, col) => {
+  if (row >= 0 && row <= 6 && col >= 0 && col <= 6) {
+    return true;
+  }
+
+  return false;
+};
+
+const calcCaptures = (board) => {
+  // TODO
+
+  const possibleCaptures = board.map((row) => {
+    row.map((piece) => {
+      return piece;
+    });
+  });
+
+  return possibleCaptures;
 };
