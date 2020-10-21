@@ -108,17 +108,21 @@ const record = (history, aggregate) => {
 const getTeam = ([x, _]) => {
   if (x.toUpperCase() === 'W') {
     return 1;
+  } else if (x.toUpperCase() === 'B') {
+    return 2;
   }
 
-  return 2;
+  return 0;
 };
 
 const getRole = ([x, _]) => {
   if (x === 'w' || x === 'b') {
     return 1;
+  } else if (x === 'W' || x === 'B') {
+    return 2;
   }
   
-  return 2;
+  return 0;
 };
 
 const inRange = (row, col) => {
@@ -127,12 +131,4 @@ const inRange = (row, col) => {
   }
 
   return false;
-};
-
-const calcCaptures = (board, turn) => {
-  // TODO
-};
-
-const calcMoves = () => {
-  // TODO
 };
