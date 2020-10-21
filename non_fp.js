@@ -1,6 +1,6 @@
 const calcCaptures = (board, turn) => {
   let possibleCaptures = [];
-  for (let row = 0; row < board.length; i++) {
+  for (let row = 0; row < board.length; row++) {
     for (let col = 0; col < row.length; col++) {
       if (getTeam(board[row][col]) === 1 && turn === 1) {
         if (inRange(row - 2, col - 2)) {
@@ -51,10 +51,22 @@ const calcCaptures = (board, turn) => {
       }
     }
   }
-  
+
   return possibleCaptures;
 };
   
 const calcMoves = () => {
   // TODO
 };
+
+const ahadma = [
+  ['b', '', '', '', '', '', ''], 
+  ['', 'w', '', '', '', '', ''], 
+  ['', '', '', '', '', '', ''], 
+  ['', '', '', '', '', '', ''], 
+  ['', '', '', '', '', '', ''], 
+  ['', '', '', '', '', '', ''], 
+  ['', '', '', '', '', '', '']
+];
+
+console.log(calcCaptures(ahadma, 2));
