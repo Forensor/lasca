@@ -106,10 +106,12 @@ const record = (history, aggregate) => {
 };
 
 const getTeam = ([x, _]) => {
-  if (x.toUpperCase() === 'W') {
-    return 1;
-  } else if (x.toUpperCase() === 'B') {
-    return 2;
+  if (x !== undefined) {
+    if (x.toUpperCase() === 'W') {
+      return 1;
+    } else if (x.toUpperCase() === 'B') {
+      return 2;
+    }
   }
 
   return 0;
