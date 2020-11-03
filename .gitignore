@@ -11,5 +11,4 @@
 .ionide
 
 ### Specific files ###
-/node_modules
-/oldapp
+/src/node_modules
