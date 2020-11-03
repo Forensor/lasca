@@ -6,20 +6,20 @@
 header {
     padding: 10px;
 }
-.title {
+#title {
     font-size: 32px;
 }
-.title a {
+#title a {
     text-decoration: none;
     color: rgb(64, 64, 64)
 }
-.title a:hover{
+#title a:hover{
     color: rgb(122, 142, 168);
 }
 body {
     background-color: rgb(230, 227, 224);
 }
-.game {
+#game {
     width: 990px;
     height: 490px;
     margin: auto;
@@ -28,14 +28,14 @@ body {
     grid-template-rows: 100px auto;
     gap: 10px;
 }
-.chat, .board, .info, .history {
+#chat, #board, #info, #history {
     background-color: rgb(255, 255, 255);
     -webkit-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.75);
     -moz-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.75);
     box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.75);
 }
 
-.board {
+#board {
     grid-column-start: 2;
     grid-column-end: 4;
     grid-row-start: 1;
@@ -47,7 +47,7 @@ body {
     grid-template-columns: repeat(7, auto);
     grid-template-rows: repeat(7, auto);
 }
-.chat {
+#chat {
     grid-row-start: 1;
     grid-row-end: 3;
     display: grid;
@@ -55,112 +55,112 @@ body {
     gap: 10px;
     padding: 10px;
 }
-.cbody {
+#cbody {
     display: inline-block;
     word-break: break-word;
     overflow-y: auto;
 }
-.cusername {
+#cusername {
     text-decoration: none;
     font-weight: bold;
     color: black;
 }
-.cinput input {
+#cinput input {
     width: calc(100% - 3px);
 }
-.info {
+#info {
     padding: 10px;
     display: grid;
     grid-template-rows: auto auto auto auto;
 }
-.ilogoplayers {
+#ilogoplayers {
     display: grid;
     grid-template-columns: 38px auto;
     column-gap: 20px;
 }
-.ivariantlogo {
+#ivariantlogo {
     -webkit-user-select: none;
     -moz-user-select: none;
 }
-.itypeofgame {
+#itypeofgame {
     text-align: center;
 }
-.iwhiteplayer {
+#iwhiteplayer {
     display: grid;
     grid-template-columns: 20px auto;
 }
-.iwhitepiece {
+#iwhitepiece {
     -webkit-user-select: none;
     -moz-user-select: none;
 }
-.iwhitename a {
+#iwhitename a {
     text-decoration: none;
     color: black;
 }
-.iblackplayer {
+#iblackplayer {
     display: grid;
     grid-template-columns: 20px auto;
 }
-.iblackpiece {
+#iblackpiece {
     -webkit-user-select: none;
     -moz-user-select: none;
 }
-.iblackname a {
+#iblackname a {
     text-decoration: none;
     color: black;
 }
-.igamestatus {
+#igamestatus {
     text-align: center;
 }
-.history {
+#history {
     cursor: pointer;
     display: grid;
     grid-template-rows: 90% auto;
 }
-.hmoves {
+#hmoves {
     display: grid;
     grid-template-columns: 30px auto;
     overflow-y: auto;
     max-height: 342px;
 }
-.hmovenumbers {
+#hmovenumbers {
     display: grid;
     grid-auto-rows: 30px;
 }
-.hmovenumbers p {
+#hmovenumbers p {
     margin: auto;
 }
-.hmovenotations {
+#hmovenotations {
     display: grid;
     grid-template-columns: auto auto;
     grid-auto-rows: 30px;
 }
-.hmovenotations button {
+#hmovenotations button {
     border: none;
     background-color: rgb(255, 255, 255);
     cursor: inherit;
 }
-.hmovenotations button:hover {
+#hmovenotations button:hover {
     background-color: rgb(170, 190, 216);
 }
-.hbuttons {
+#hbuttons {
     display: grid;
     grid-template-columns: auto auto auto auto auto auto;
     border-top: 1px solid rgb(230, 230, 230);
     -webkit-user-select: none;
     -moz-user-select: none;
 }
-.hbuttons button {
+#hbuttons button {
     border: none;
     background-color: rgb(255, 255, 255);
     cursor: inherit;
 }
-.hbuttons button:hover {
+#hbuttons button:hover {
     background-color: rgb(122, 142, 168);
 }
-.hbuttons button:hover img {
+#hbuttons button:hover img {
     filter: invert(100%);
 }
-.history button:focus {
+#history button:focus {
     outline: 0;
 }
