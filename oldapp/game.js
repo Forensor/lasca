@@ -16,10 +16,3 @@ const newGame = () => {
 
   return newTurn(board, turn, moveNumber, history);
 };
-
-const newTurn = (board, turn, moveNumber, history) => {
-  const possibleCaptures = calcCaptures(board, turn);
-  if (possibleCaptures === []) {
-    
-  }
-};

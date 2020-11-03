@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" type="image/png" href="favicon-32x32.png">
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+    <title>Lasca</title>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="title">
+                <a href="index.html">playLasca.org</a>
+            </div>
+        </header>
+        <div class="game">
+            <aside class="chat">
+                <div class="cheader">
+                    Chat
+                </div>
+                <div class="cbody">
+                    <a href="users/forensor.html" title="forensor's user page" class="cusername">forensor</a>: Waddup!
+                </div>
+                <div class="cinput">
+                    <input type="text" placeholder="Write here..." id="msg" name="msg" />
+                </div>
+            </aside>
+            <div class="board">
+    
+            </div>
+            <div class="info">
+                <div class="itypeofgame">
+                    Standard · No time limit
+                </div>
+                <div class="ilogoplayers">
+                    <div class="ivariantlogo">
+                        <img src="img/ui/standard.svg" width="38px" height="38px" draggable="false" />
+                    </div>
+                    <div class="iplayers">
+                        <div class="iwhiteplayer">
+                            <div class="iwhitepiece"><img src="img/ui/wicon.svg" width="10px" height="10px" draggable="false" /></div>
+                            <div class="iwhitename"><a href="users/username1.html">Username1</a></div>
+                        </div>
+                        <div class="iblackplayer">
+                            <div class="iblackpiece"><img src="img/ui/bicon.svg" width="10px" height="10px" draggable="false" /></div>
+                            <div class="iblackname"><a href="users/username2.html">Username2</a></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="igamestatus">
+                    White turn
+                </div>
+            </div>
+            <div class="history">
+                <div class="hmoves">
+                    <div class="hmovenumbers">
+
+                    </div>
+                    <div class="hmovenotations">
+                        
+                    </div>
+                </div>
+                <div class="hbuttons">
+                    <button type="button" title="Flip board"><img src="img/ui/flipBoard.svg" width="25px" height="25px" draggable="false" /></button>
+                    <button type="button" title="Previous move"><img src="img/ui/larrow.svg" width="25px" height="25px" draggable="false" /></button>
+                    <button type="button" title="Next move"><img src="img/ui/rarrow.svg" width="25px" height="25px" draggable="false" /></button>
+                    <button type="button" title="Offer a draw"><img src="img/ui/draw.svg" width="25px" height="25px" draggable="false" /></button>
+                    <button type="button" title="Resign"><img src="img/ui/resign.svg" width="25px" height="25px" draggable="false" /></button>
+                    <button type="button" title="Request position"><img src="img/ui/request.svg" width="25px" height="25px" draggable="false" /></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

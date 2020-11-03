@@ -11,6 +11,4 @@
 .ionide
 
 ### Specific files ###
-tests.js
-debug.log
-index.html
+/node_modules
