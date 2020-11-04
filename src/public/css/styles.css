@@ -28,7 +28,7 @@ body {
     grid-template-rows: 100px auto;
     gap: 10px;
 }
-#chat, #board, #info, #history {
+#chat, #board, #info, #history, #userform {
     background-color: rgb(255, 255, 255);
     -webkit-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.75);
     -moz-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.75);
@@ -163,4 +163,28 @@ body {
 }
 #history button:focus {
     outline: 0;
+}
+#userform {
+    background-color: white;
+    margin: auto;
+    width: 40%;
+    padding: 10px;
+}
+#userform input {
+    width: calc(100% - 14px);
+    height: 30px;
+    font-size: 20px;
+    padding: 5px;
+}
+#userform button {
+    width: 100%;
+    height: 50px;
+    color: white;
+    font-size: 20px;
+    border: 0;
+    background-color:  rgb(122, 142, 168);
+    cursor: pointer;
+}
+#register {
+    padding: 20px;
 }

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" type="image/png" href="favicon-32x32.png">
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+    <title>playLasca.org • Register</title>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div id="title">
+                <a href="index.html">playLasca.org</a>
+            </div>
+            <div><a href="login.html">LOG IN</a></div>
+            <div><a href="register.html">REGISTER</a></div>
+        </header>
+        <div id="userform">
+            <p style="text-align: center;">Register in playLasca.org</p>
+            <form id="register" method="POST" action="/ur">
+                <p>Username</p><br>
+                <input type="text" name="username" placeholder="Enter a unique username..." />
+                <br><br>
+                <p>Password</p><br>
+                <input type="password" name="password" placeholder="Type a strong password..." />
+                <br><br>
+                <button type="submit">REGISTER</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+</body>
+</html>
