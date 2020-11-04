@@ -1,14 +1,8 @@
-# lasca
+# playLasca.org
 
-![alt text](https://img.shields.io/github/license/forensor/lasca)![alt text](https://img.shields.io/twitter/url?label=Twitter%20%40forensor&style=social&url=https%3A%2F%2Ftwitter.com%2Fforensor)![alt text](https://img.shields.io/npm/v/express?label=express)![alt text](https://img.shields.io/npm/v/socket.io?label=socket.io)
-Emanuel Lasker's game done in js.
+![alt text](https://img.shields.io/github/license/forensor/lasca) ![alt text](https://img.shields.io/badge/Twitter-%40forensor-blue) ![alt text](https://img.shields.io/npm/v/express?label=express) ![alt text](https://img.shields.io/npm/v/socket.io?label=socket.io)
 
-Main purpose is achieve greater knowledge and having fun. I'm just starting in app-dev world so I use what I know.
+playLasca is an open source web application done to play [lasca](https://en.wikipedia.org/wiki/Lasca "Lasca game article") anywhere/anytime against anyone you want in a fancy user-friendly interface.
 
-Feel free to use/improve this idea as you wish (lichess-like website, android/iOS app, etc).
+[Lasca](https://en.wikipedia.org/wiki/Lasca "Lasca game article") is a checkers (or draughts) variants invented by the World Chess Champion [Emanuel Lasker](https://en.wikipedia.org/wiki/Emanuel_Lasker "The Master") in 1911. Lasca is played in a 7x7 chess-like board using only the dark squares, like checkers, but the major difference between them and other draughts variants is that instead of pieces being removed from the board when captured, they are placed under the piece that jumped them, forming a column that allows them to be later released. This boils down to a more exciting experience, in which epic comebacks come true.
 
-You can find further info about the game here: https://en.wikipedia.org/wiki/Lasca
-
-Regards,
-
-Álvaro S.
