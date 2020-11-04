@@ -6,7 +6,7 @@
     <link rel="shortcut icon" type="image/png" href="favicon-32x32.png">
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
-    <title>playLasca.org • Lasker's game</title>
+    <title>playLasca.org • Login</title>
 </head>
 <body>
     <div id="app">
@@ -21,13 +21,21 @@
                 </ul>
             </div>
         </header>
-        <div id="homepage">
-            Welcome to playLasca.org!
+        <div id="userform">
+            <p style="text-align: center;">Log in with your account</p>
+            <form id="register" method="POST" action="/ul">
+                <p>Username</p><br>
+                <input type="text" name="username" placeholder="Enter username" />
+                <br><br>
+                <p>Password</p><br>
+                <input type="password" name="password" placeholder="Enter password" />
+                <br><br>
+                <button type="submit">LOGIN</button>
+            </form>
         </div>
     </div>
 
     <!-- Scripts -->
     <script src="/socket.io/socket.io.js"></script>
-    <script src="js/chat.js"></script>
 </body>
 </html>

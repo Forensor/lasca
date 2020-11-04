@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" type="image/png" href="favicon-32x32.png">
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+    <title>playLasca.org • Playing</title>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div id="title">
+                <a href="/">playLasca.org</a>
+            </div>
+            <div id="links">
+                <ul>
+                    <li><a href="/login">LOG IN</a></li>
+                    <li><a href="/register">REGISTER</a></li>
+                </ul>
+            </div>
+        </header>
+        <div id="game">
+            <aside id="chat">
+                <div id="cheader">
+                    Chat
+                </div>
+                <div id="cbody">
+                    
+                </div>
+                <div id="cinput">
+                    <input type="text" placeholder="Write here..." id="msg" name="msg" />
+                </div>
+            </aside>
+            <div id="board">
+    
+            </div>
+            <div id="info">
+                <div id="itypeofgame">
+                    Standard · No time limit
+                </div>
+                <div id="ilogoplayers">
+                    <div id="ivariantlogo">
+                        <img src="img/ui/standard.svg" width="38px" height="38px" draggable="false" />
+                    </div>
+                    <div id="iplayers">
+                        <div id="iwhiteplayer">
+                            <div id="iwhitepiece"><img src="img/ui/wicon.svg" width="10px" height="10px" draggable="false" /></div>
+                            <div id="iwhitename"><a href="users/username1">Username1</a></div>
+                        </div>
+                        <div id="iblackplayer">
+                            <div id="iblackpiece"><img src="img/ui/bicon.svg" width="10px" height="10px" draggable="false" /></div>
+                            <div id="iblackname"><a href="users/username2">Username2</a></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="igamestatus">
+                    White turn
+                </div>
+            </div>
+            <div id="history">
+                <div id="hmoves">
+                    <div id="hmovenumbers">
+                        <!-- <p>1</p> -->
+                    </div>
+                    <div id="hmovenotations">
+                        <!-- <button type="button">a1-e5-b3</button> -->
+                    </div>
+                </div>
+                <div id="hbuttons">
+                    <button type="button" id="flip" title="Flip board"><img src="img/ui/flipBoard.svg" width="25px" height="25px" draggable="false" /></button>
+                    <button type="button" id="prev" title="Previous move"><img src="img/ui/larrow.svg" width="25px" height="25px" draggable="false" /></button>
+                    <button type="button" id="next" title="Next move"><img src="img/ui/rarrow.svg" width="25px" height="25px" draggable="false" /></button>
+                    <button type="button" id="draw" title="Offer a draw"><img src="img/ui/draw.svg" width="25px" height="25px" draggable="false" /></button>
+                    <button type="button" id="resign" title="Resign"><img src="img/ui/resign.svg" width="25px" height="25px" draggable="false" /></button>
+                    <button type="button" id="req" title="Request position"><img src="img/ui/request.svg" width="25px" height="25px" draggable="false" /></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/chat.js"></script>
+</body>
+</html>

@@ -8,6 +8,7 @@ header {
 }
 #title {
     font-size: 32px;
+    float: left;
 }
 #title a {
     text-decoration: none;
@@ -15,6 +16,21 @@ header {
 }
 #title a:hover{
     color: rgb(122, 142, 168);
+}
+#links ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+#links ul li {
+    float: left;
+}
+#links ul li a {
+    display: block;
+    text-align: center;
+    padding: 16px;
+    text-decoration: none;
 }
 body {
     background-color: rgb(230, 227, 224);
@@ -28,7 +44,13 @@ body {
     grid-template-rows: 100px auto;
     gap: 10px;
 }
-#chat, #board, #info, #history, #userform {
+#homepage {
+    background-color: white;
+    margin: auto;
+    width: 60%;
+    padding: 10px;
+}
+#chat, #board, #info, #history, #userform, #homepage {
     background-color: rgb(255, 255, 255);
     -webkit-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.75);
     -moz-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.75);

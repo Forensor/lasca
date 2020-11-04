@@ -37,7 +37,7 @@ const databaseCreation = async () => {
     console.log(err.message);
   }
   
-  console.log('DB operational, closing now...');
+  console.log('DB operational');
   db.close();
 };
 
@@ -58,6 +58,18 @@ const server = app.listen(app.get('port'), () => {
 const io = socketio.listen(server);
 
 // Routes
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/register', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'register.html'));
+});
+
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
 app.post('/ur', async (req, res) => {
   let db;
   let registered;
@@ -77,10 +89,8 @@ app.post('/ur', async (req, res) => {
     console.log(err.message);
   }
 
-  res.redirect('/');
-
   if (registered) {
-    console.log('User already registered');
+    res.redirect('/register');
   } else {
     try {
       await db.run(
@@ -88,6 +98,7 @@ app.post('/ur', async (req, res) => {
         [username, bcrypt.hashSync(password, 10)]
       );
       console.log(username, 'registered');
+      res.redirect('/');
     } catch (err) {
       console.log(err.message);
     }
@@ -100,7 +111,6 @@ io.on('connection', (socket) => {
   console.log('Client', socket.id, 'connected');
 
   socket.on('message', (data) => {
-    console.log(data);
     io.sockets.emit('message', data);
   });
 });
