@@ -6,13 +6,13 @@
     <link rel="shortcut icon" type="image/png" href="favicon-32x32.png">
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
-    <title>playLasca.org • Register</title>
+    <title>onlasca.org • Register</title>
 </head>
 <body>
     <div id="app">
         <header>
             <div id="title">
-                <a href="/">playLasca.org</a>
+                <a href="/">onlasca.org</a>
             </div>
             <div id="links">
                 <ul>
@@ -21,17 +21,23 @@
                 </ul>
             </div>
         </header>
+        <% if (message.length > 0) { %>
+            <div id="error">
+                <%= message %>
+            </div>
+        <% } %>
         <div id="userform">
-            <p style="text-align: center;">Register in playLasca.org</p>
-            <form id="register" method="POST" action="/ur">
+            <p style="text-align: center; font-weight: bold;">Register in onlasca.org</p>
+            <form id="register" method="POST" action="/register">
                 <p>Username</p><br>
-                <input type="text" name="username" placeholder="Enter a unique username..." />
+                <input type="text" name="username" placeholder="Enter a unique username..." maxlength="15" />
                 <br><br>
                 <p>Password</p><br>
-                <input type="password" name="password" placeholder="Type a strong password..." />
+                <input type="password" name="password" placeholder="Type a strong password..." maxlength="24" />
                 <br><br>
                 <button type="submit">REGISTER</button>
             </form>
+            <p>Already registered? <a href="/login">Log in</a></p>
         </div>
     </div>
 

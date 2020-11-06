@@ -6,13 +6,13 @@
     <link rel="shortcut icon" type="image/png" href="favicon-32x32.png">
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
-    <title>playLasca.org • Lasker's game</title>
+    <title>onlasca.org • Lasker's game</title>
 </head>
 <body>
     <div id="app">
         <header>
             <div id="title">
-                <a href="/">playLasca.org</a>
+                <a href="/">onlasca.org</a>
             </div>
             <div id="links">
                 <ul>
@@ -21,13 +21,27 @@
                 </ul>
             </div>
         </header>
+        <% if (message.length > 0) { %>
+            <div id="success" class="fade">
+                <%= message %>
+            </div>
+            <script>
+                let successDiv = document.getElementById('success');
+                setInterval(() => {
+                  successDiv.style.opacity -= .1
+                  if (successDiv.style.opacity <= -0.5) {
+                      successDiv.remove();
+                      clearInterval();
+                  }
+                }, 1000);
+            </script>
+        <% } %>
         <div id="homepage">
-            Welcome to playLasca.org!
+            Welcome to onlasca.org!
         </div>
     </div>
 
     <!-- Scripts -->
     <script src="/socket.io/socket.io.js"></script>
-    <script src="js/chat.js"></script>
 </body>
 </html>

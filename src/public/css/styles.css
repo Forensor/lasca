@@ -50,6 +50,33 @@ body {
     width: 60%;
     padding: 10px;
 }
+#error {
+    border: 1px solid #7F0000;
+    background-color: #FFC6C6;
+    text-align: center;
+    padding: 10px;
+    width: 40%;
+    margin: auto;
+    color: #7F0000;
+    margin: 10px auto 10px auto;
+}
+#success {
+    border: 1px solid #7FBE00;
+    background-color: #CBFFC6;
+    text-align: center;
+    padding: 10px;
+    width: 40%;
+    left: calc(50% - 20%);
+    top: 15%;
+    color: #7FBE00;
+    margin: 10px auto 10px auto;
+    opacity: .75;
+    position: fixed;
+    z-index: 3;
+    transition: opacity 2s ease-in-out;
+    -moz-transition: opacity 2s ease-in-out;
+    -webkit-transition: opacity 2s ease-in-out;
+}
 #chat, #board, #info, #history, #userform, #homepage {
     background-color: rgb(255, 255, 255);
     -webkit-box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.75);

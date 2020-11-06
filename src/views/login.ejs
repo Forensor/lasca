@@ -6,13 +6,13 @@
     <link rel="shortcut icon" type="image/png" href="favicon-32x32.png">
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
-    <title>playLasca.org • Login</title>
+    <title>onlasca.org • Login</title>
 </head>
 <body>
     <div id="app">
         <header>
             <div id="title">
-                <a href="/">playLasca.org</a>
+                <a href="/">onlasca.org</a>
             </div>
             <div id="links">
                 <ul>
@@ -21,17 +21,23 @@
                 </ul>
             </div>
         </header>
+        <% if (message.length > 0) { %>
+            <div id="error">
+                <%= message %>
+            </div>
+        <% } %>
         <div id="userform">
-            <p style="text-align: center;">Log in with your account</p>
-            <form id="register" method="POST" action="/ul">
+            <p style="text-align: center; font-weight: bold;">Log in with your account</p>
+            <form id="register" method="POST" action="/login">
                 <p>Username</p><br>
-                <input type="text" name="username" placeholder="Enter username" />
+                <input type="text" name="username" placeholder="Enter username" maxlength="15" />
                 <br><br>
                 <p>Password</p><br>
-                <input type="password" name="password" placeholder="Enter password" />
+                <input type="password" name="password" placeholder="Enter password" maxlength="24" />
                 <br><br>
                 <button type="submit">LOGIN</button>
             </form>
+            <p>Need an account? <a href="/register">Register</a></p>
         </div>
     </div>
 
