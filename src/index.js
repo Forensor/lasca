@@ -145,6 +145,33 @@ const validatePassword = (password) => {
   return false;
 };
 
+const userExists = async (username) => {
+  let db;
+  let user;
+  try {
+    db = await sqliteAsync.open('LASCA.sqlite3');
+    console.log('DB LASCA ready');
+  } catch (err) {
+    console.log(err.message);
+  }
+  try {
+    user = await db.get(
+      'SELECT * FROM USER WHERE username = ?', 
+      [username]
+    );
+  } catch (err) {
+    console.log(err.message);
+  }
+
+  db.close();
+
+  if (user) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
 // Database
 databaseCreation();
 
@@ -191,17 +218,21 @@ app.get('/login', (req, res) => {
   }
 });
 
-app.get('/@/:username', (req, res) => {
-  if (req.isAuthenticated()) {
-    res.render('profile', {
-      username: req.user.username,
-      profile: req.params.username
-    });
+app.get('/@/:username', async (req, res) => {
+  if (await userExists(req.params.username)) {
+    if (req.isAuthenticated()) {
+      res.render('profile', {
+        username: req.user.username,
+        profile: req.params.username
+      });
+    } else {
+      res.render('profile', {
+        username: '',
+        profile: req.params.username
+      });
+    }
   } else {
-    res.render('profile', {
-      username: '',
-      profile: req.params.username
-    });
+    res.redirect('/');
   }
 });
 

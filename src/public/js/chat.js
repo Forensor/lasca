@@ -20,5 +20,5 @@ msg.addEventListener('keydown', (evnt) => {
 // Socket events
 
 socket.on('message', (data) => {
-  chat.innerHTML += `<p><a href="users/${data.username}.html" title="${data.username}'s user page" id="cusername">${data.username}</a>: ${data.message}</p>`;
+  chat.innerHTML += `<p><a href="/@/${data.username}" title="${data.username}'s user page" id="cusername">${data.username}</a>: ${data.message}</p>`;
 });
