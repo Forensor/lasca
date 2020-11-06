@@ -55,7 +55,7 @@ passport.deserializeUser(async (id, done) => {
   }
 
   db.close();
-  done(err, user);
+  done(null, user);
 });
 
 passport.use('local-login', new LocalStrategy({
