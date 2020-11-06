@@ -160,9 +160,13 @@ const io = socketio.listen(server);
 
 // Routes
 app.get('/', (req, res) => {
-  res.render('index', {
-    message: req.flash('success')
-  });
+  if (req.isAuthenticated()) {
+    res.render('index', {
+      message: 'Logged in!'
+    });
+  } else {
+    res.render('index', { message: req.flash('success') });
+  }
 });
 
 app.get('/register', (req, res) => {
@@ -229,6 +233,11 @@ app.post('/login', passport.authenticate('local-login', {
   failureRedirect: '/login',
   failureFlash: true
 }));
+
+app.get('/logout', (req, res) => {
+  req.logOut();
+  res.redirect('/');
+});
 
 // Websockets
 io.on('connection', (socket) => {
