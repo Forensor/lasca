@@ -81,18 +81,16 @@ passport.use('local-login', new LocalStrategy({
 
   if (!user) {
     db.close();
-    return done(null, false, req.flash('error', 'No registered user with that username'));
+    return done(null, false, req.flash('error', 'That user is not registered'));
   } else {
-    /*try {
-      console.log(username, 'logged');
-      req.flash('success', 'Logged in');
-      res.redirect('/');
-    } catch (err) {
-      console.log(err.message);
-    }*/
+    if (bcrypt.compareSync(password, user.password)) {
+      db.close();
+      return done(null, user);
+    } else {
+      db.close();
+      return done(null, false, req.flash('error', 'Incorrect password'));
+    }
   }
-  db.close();
-  return done(null, user);
 }));
 
 // Settings
@@ -162,23 +160,49 @@ const io = socketio.listen(server);
 app.get('/', (req, res) => {
   if (req.isAuthenticated()) {
     res.render('index', {
-      message: 'Logged in!'
+      username: req.user.username,
+      message: ''
     });
   } else {
-    res.render('index', { message: req.flash('success') });
+    res.render('index', { 
+      username: '',
+      message: req.flash('success')
+    });
   }
 });
 
 app.get('/register', (req, res) => {
-  res.render('register', {
-    message: req.flash('error')
-  });
+  if (req.isAuthenticated()) {
+    res.redirect('/');
+  } else {
+    res.render('register', {
+      message: req.flash('error')
+    });
+  }
 });
 
 app.get('/login', (req, res) => {
-  res.render('login', {
-    message: req.flash('loginMessage')
-  });
+  if (req.isAuthenticated()) {
+    res.redirect('/');
+  } else {
+    res.render('login', {
+      message: req.flash('error')
+    });
+  }
+});
+
+app.get('/@/:username', (req, res) => {
+  if (req.isAuthenticated()) {
+    res.render('profile', {
+      username: req.user.username,
+      profile: req.params.username
+    });
+  } else {
+    res.render('profile', {
+      username: '',
+      profile: req.params.username
+    });
+  }
 });
 
 app.post('/register', async (req, res) => {
