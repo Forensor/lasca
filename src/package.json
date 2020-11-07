@@ -11,7 +11,7 @@
     "lasca"
   ],
   "author": "forensor",
-  "license": "ISC",
+  "license": "GPL-3.0-or-later",
   "dependencies": {
     "bcrypt": "^5.0.0",
     "connect-flash": "^0.1.1",

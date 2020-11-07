@@ -63,31 +63,14 @@ passport.use('local-login', new LocalStrategy({
   passwordField: 'password',
   passReqToCallback: true
 }, async (req, username, password, done) => {
-  let db;
-  let user;
-  try {
-    db = await sqliteAsync.open('LASCA.sqlite3');
-  } catch (err) {
-    console.log(err.message);
-  }
-  try {
-    user = await db.get(
-      'SELECT * FROM USER WHERE username = ?', 
-      [username]
-    );
-  } catch (err) {
-    console.log(err.message);
-  }
+  const user = await userExists(username);
 
   if (!user) {
-    db.close();
     return done(null, false, req.flash('error', 'That user is not registered'));
   } else {
     if (bcrypt.compareSync(password, user.password)) {
-      db.close();
       return done(null, user);
     } else {
-      db.close();
       return done(null, false, req.flash('error', 'Incorrect password'));
     }
   }
@@ -166,7 +149,7 @@ const userExists = async (username) => {
   db.close();
 
   if (user) {
-    return true;
+    return user;
   } else {
     return false;
   }
@@ -237,26 +220,7 @@ app.get('/@/:username', async (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-  // User register
-
-  let db;
-  let registered;
-  const username = req.body.username;
-  const password = req.body.password;
-  try {
-    db = await sqliteAsync.open('LASCA.sqlite3');
-  } catch (err) {
-    console.log(err.message);
-  }
-  try {
-    registered = await db.get(
-      'SELECT * FROM USER WHERE username = ?', 
-      [username]
-    );
-  } catch (err) {
-    console.log(err.message);
-  }
-
+  const registered = userExists(username);
   const validUsername = validateUsername(username);
   const validPassword = validatePassword(password);
 
@@ -300,5 +264,9 @@ io.on('connection', (socket) => {
 
   socket.on('message', (data) => {
     io.sockets.emit('message', data);
+  });
+  socket.on('online', (data) => {
+    console.log(data);
+    io.sockets.emit('online', data);
   });
 });

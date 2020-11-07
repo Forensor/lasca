@@ -31,6 +31,7 @@ header {
     text-align: center;
     padding: 16px;
     text-decoration: none;
+    color: rgb(64, 64, 64);
 }
 body {
     background-color: rgb(230, 227, 224);

@@ -11,6 +11,7 @@
 <body>
     <div id="app">
         <header>
+            <div id="userlogged" style="visibility: hidden;"><% if (username.length > 0) { %><%= username %><% } %></div>
             <div id="title">
                 <a href="/">onlasca.org</a>
             </div>
@@ -43,10 +44,15 @@
         <% } %>
         <div id="homepage">
             Welcome to onlasca.org!
+            <br><br>
+            Online users:
+            <br><br>
+            <div id="onlineusers"></div>
         </div>
     </div>
 
     <!-- Scripts -->
     <script src="/socket.io/socket.io.js"></script>
+    <script src="js/online-users.js"></script>
 </body>
 </html>
