@@ -11,13 +11,13 @@
 <body>
     <div id="app">
         <header>
-            <div id="userlogged" style="visibility: hidden;"><% if (username.length > 0) { %><%= username %><% } %></div>
+            <div id="userlogged" style="visibility: hidden; height: 0px; width: 0px;"><%= username %></div>
             <div id="title">
                 <a href="/">onlasca.org</a>
             </div>
             <div id="links">
                 <ul>
-                    <% if (username.length > 0) { %>
+                    <% if (username != 'anonymous') { %>
                         <li><a href="/@/<%= username %>"><%= username %></a></li>
                         <li><a href="/logout">LOG OUT</a></li>
                     <% } else { %>

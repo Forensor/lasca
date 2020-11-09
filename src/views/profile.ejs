@@ -16,7 +16,7 @@
             </div>
             <div id="links">
                 <ul>
-                    <% if (username.length > 0) { %>
+                    <% if (username != 'anonymous') { %>
                         <li><a href="/@/<%= username %>"><%= username %></a></li>
                         <li><a href="/logout">LOG OUT</a></li>
                     <% } else { %>

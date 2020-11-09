@@ -96,7 +96,9 @@ const databaseCreation = async () => {
       `CREATE TABLE IF NOT EXISTS USER (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL
+        password TEXT NOT NULL,
+        creation_date TEXT NOT NULL,
+        online INTEGER NOT NULL
       )`
     );
     console.log('TABLE USER ready');
@@ -155,6 +157,63 @@ const userExists = async (username) => {
   }
 };
 
+const updateUserConnectionStatus = async (username, status) => {
+  let db;
+  try {
+    db = await sqliteAsync.open('LASCA.sqlite3');
+  } catch (err) {
+    console.log(err.message);
+  }
+  try {
+    await db.run(
+      'UPDATE USER SET online = ? WHERE username = ?', 
+      [status, username]
+    );
+  } catch (err) {
+    console.log(err.message);
+  }
+
+  db.close();
+};
+
+const getOnlineUsers = async () => {
+  let db;
+  let users;
+  try {
+    db = await sqliteAsync.open('LASCA.sqlite3');
+  } catch (err) {
+    console.log(err.message);
+  }
+  try {
+    users = await db.all(
+      'SELECT * FROM USER WHERE online = 1'
+    );
+  } catch (err) {
+    console.log(err.message);
+  }
+
+  db.close();
+  const usernames = users.map(u => u.username);
+
+  return usernames;
+};
+
+const insertNewUser = async (username, password) => {
+  let db;
+  try {
+    db = await sqliteAsync.open('LASCA.sqlite3');
+  } catch (err) {
+    console.log(err.message);
+  }
+  let d = new Date();
+  let date = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}.${d.getMilliseconds()}`;
+  await db.run(
+    'INSERT INTO USER(username, password, creation_date, online) VALUES(?, ?, ?, ?)', 
+    [username, bcrypt.hashSync(password, 10), date, 0]
+  );
+  db.close();
+};
+
 // Database
 databaseCreation();
 
@@ -175,7 +234,7 @@ app.get('/', (req, res) => {
     });
   } else {
     res.render('index', { 
-      username: '',
+      username: 'anonymous',
       message: req.flash('success')
     });
   }
@@ -210,7 +269,7 @@ app.get('/@/:username', async (req, res) => {
       });
     } else {
       res.render('profile', {
-        username: '',
+        username: 'anonymous',
         profile: req.params.username
       });
     }
@@ -220,9 +279,9 @@ app.get('/@/:username', async (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-  const registered = userExists(username);
-  const validUsername = validateUsername(username);
-  const validPassword = validatePassword(password);
+  const registered = await userExists(req.body.username);
+  const validUsername = validateUsername(req.body.username);
+  const validPassword = validatePassword(req.body.password);
 
   if (registered || !validUsername || !validPassword) {
     if (registered) {
@@ -233,18 +292,14 @@ app.post('/register', async (req, res) => {
     res.redirect('/register');
   } else {
     try {
-      await db.run(
-        'INSERT INTO USER(username, password) VALUES(?, ?)', 
-        [username, bcrypt.hashSync(password, 10)]
-      );
-      console.log(username, 'registered');
+      await insertNewUser(req.body.username, req.body.password);
+      console.log(req.body.username, 'registered');
       req.flash('success', 'Registration successful!');
       res.redirect('/');
     } catch (err) {
       console.log(err.message);
     }
   }
-  db.close();
 });
 
 app.post('/login', passport.authenticate('local-login', {
@@ -265,8 +320,14 @@ io.on('connection', (socket) => {
   socket.on('message', (data) => {
     io.sockets.emit('message', data);
   });
-  socket.on('online', (data) => {
-    console.log(data);
-    io.sockets.emit('online', data);
+  
+  socket.on('online', async (data) => {
+    updateUserConnectionStatus(data.username, 1);
+    console.log(await getOnlineUsers());
+    io.sockets.emit('online', await getOnlineUsers());
+
+    socket.on('disconnect', () => {
+      updateUserConnectionStatus(data.username, 0);
+    });
   });
 });
