@@ -8,6 +8,8 @@ let board = [
     ['w', '', 'w', '', 'w', '', 'w']
 ];
 
+let flipped = false;
+
 let fen = 'bbbb/bbb/bbbb/3/wwww/www/wwww';
 
 const coords = [
@@ -21,16 +23,24 @@ const coords = [
 ];
 
 const placeDivs = () => {
-    coords.forEach(row => {
-        row.forEach(coord => {
-            document.getElementById('board').innerHTML += `<div id="${coord}" style="position: relative;"></div>`;
+    document.getElementById('board').innerHTML = '';
+    if (flipped) {
+        for (let i = coords.length - 1; i >= 0; i--) {
+            coords[i].forEach(coord => {
+                document.getElementById('board').innerHTML += `<div id="${coord}" style="position: relative;"></div>`;
+            });
+        }
+    } else {
+        coords.forEach(row => {
+            row.forEach(coord => {
+                document.getElementById('board').innerHTML += `<div id="${coord}" style="position: relative;"></div>`;
+            });
         });
-    });
+    }
 };
 
-placeDivs();
-
 const renderBoard = () => {
+    placeDivs();
     for (let row = 0; row < board.length; row++) {
         for (let col = 0; col < board[row].length; col++) {
             if (board[row][col] != '') {
@@ -53,3 +63,11 @@ const renderBoard = () => {
 };
 
 renderBoard();
+document.getElementById('flip').addEventListener('click', () => {
+    if (flipped == true) {
+        flipped = false;
+    } else if (flipped == false) {
+        flipped = true;
+    }
+    renderBoard();
+});
