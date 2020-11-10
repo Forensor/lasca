@@ -278,6 +278,47 @@ const createNewGame = async (white, black) => {
   return id.id;
 };
 
+const getGameInfo = async (id) => {
+  let db;
+  let game;
+  let white;
+  let black;
+  console.log(id);
+  try {
+    db = await sqliteAsync.open('LASCA.sqlite3');
+  } catch (err) {
+    console.log(err.message);
+  }
+  try {
+    game = await db.get(
+      'SELECT * FROM GAME WHERE id = ?', 
+      [id]
+    );
+  } catch (err) {
+    console.log(err.message);
+  }
+  try {
+    white = await db.get(
+      'SELECT * FROM USER WHERE id = ?', 
+      [game.white_player]
+    );
+  } catch (err) {
+    console.log(err.message);
+  }
+  try {
+    black = await db.get(
+      'SELECT * FROM USER WHERE id = ?', 
+      [game.black_player]
+    );
+  } catch (err) {
+    console.log(err.message);
+  }
+
+  db.close();
+
+  return { id: game.id, whitep: white.username, blackp: black.username, pgn: game.pgn, fen: game.fen };
+};
+
 // Database
 databaseCreation();
 
@@ -419,5 +460,9 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
       updateUserConnectionStatus(data.username, 0);
     });
+  });
+
+  socket.on('game-room', async (data) => {
+    io.sockets.emit('game-room', await getGameInfo(data.id));
   });
 });

@@ -9,6 +9,10 @@ let board = [
 ];
 
 let flipped = false;
+let positions = [];
+let moves = [];
+
+socket.emit('game-room', { id: document.getElementById('gameid').innerHTML });
 
 let fen = 'bbbb/bbb/bbbb/3/wwww/www/wwww';
 
@@ -70,4 +74,9 @@ document.getElementById('flip').addEventListener('click', () => {
         flipped = true;
     }
     renderBoard();
+});
+
+socket.on('game-room', (data) => {
+    document.getElementById('iwhitename').innerHTML = `<a href="/@/${data.whitep}" title="${data.whitep}'s user page">${data.whitep}</a>`;
+    document.getElementById('iblackname').innerHTML = `<a href="/@/${data.blackp}" title="${data.blackp}'s user page">${data.blackp}</a>`;
 });
