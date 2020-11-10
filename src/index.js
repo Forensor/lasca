@@ -93,15 +93,46 @@ const databaseCreation = async () => {
   
   try {
     await db.run(
-      `CREATE TABLE IF NOT EXISTS USER (
+      `
+      CREATE TABLE IF NOT EXISTS USER (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL,
         creation_date TEXT NOT NULL,
         online INTEGER NOT NULL
-      )`
+      );
+      `
     );
     console.log('TABLE USER ready');
+    await db.run(
+      `
+      CREATE TABLE IF NOT EXISTS GAME (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        white_player INTEGER NOT NULL,
+        black_player INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        pgn TEXT,
+        fen TEXT,
+        FOREIGN KEY (white_player) REFERENCES USER(id),
+        FOREIGN KEY (black_player) REFERENCES USER(id)
+      );
+      `
+    );
+    console.log('TABLE GAME ready');
+    await db.run(
+      `
+      CREATE TABLE IF NOT EXISTS MESSAGE (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user INTEGER NOT NULL,
+        game INTEGER NOT NULL,
+        date TEXT NOT NULL,
+        message_text TEXT NOT NULL,
+        FOREIGN KEY (user) REFERENCES USER(id),
+        FOREIGN KEY (game) REFERENCES GAME(id)
+      );
+      `
+    );
+    console.log('TABLE MESSAGE ready');
   } catch (err) {
     console.log(err.message);
   }
@@ -207,11 +238,44 @@ const insertNewUser = async (username, password) => {
   }
   let d = new Date();
   let date = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}.${d.getMilliseconds()}`;
-  await db.run(
-    'INSERT INTO USER(username, password, creation_date, online) VALUES(?, ?, ?, ?)', 
-    [username, bcrypt.hashSync(password, 10), date, 0]
-  );
+  try {
+    await db.run(
+      'INSERT INTO USER(username, password, creation_date, online) VALUES(?, ?, ?, ?)', 
+      [username, bcrypt.hashSync(password, 10), date, 0]
+    );
+  } catch (err) {
+    console.log(err);
+  }
   db.close();
+};
+
+const createNewGame = async (white, black) => {
+  let db;
+  let id;
+  try {
+    db = await sqliteAsync.open('LASCA.sqlite3');
+  } catch (err) {
+    console.log(err.message);
+  }
+  let d = new Date();
+  let date = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}.${d.getMilliseconds()}`;
+  try {
+    let whiteID = await db.get('SELECT id FROM USER WHERE username = ?', [white]);
+    let blackID = await db.get('SELECT id FROM USER WHERE username = ?', [black]);
+    await db.run(
+      'INSERT INTO GAME(white_player, black_player, date, fen) VALUES(?, ?, ?, ?)', 
+      [whiteID.id, blackID.id, date, 'bbbb/bbb/bbbb/3/wwww/www/wwww']
+    );
+    id = await db.get(
+      'SELECT id FROM GAME WHERE date = ?', 
+      [date]
+    );
+  } catch (err) {
+    console.log(err);
+  }
+
+  db.close();
+  return id.id;
 };
 
 // Database
@@ -256,6 +320,20 @@ app.get('/login', (req, res) => {
   } else {
     res.render('login', {
       message: req.flash('error')
+    });
+  }
+});
+
+app.get('/g/:gameid', (req, res) => {
+  if (req.isAuthenticated()) {
+    res.render('game', {
+      username: req.user.username,
+      id: req.params.gameid
+    });
+  } else {
+    res.render('game', { 
+      username: 'anonymous', 
+      id: req.params.gameid 
     });
   }
 });
@@ -320,10 +398,22 @@ io.on('connection', (socket) => {
   socket.on('message', (data) => {
     io.sockets.emit('message', data);
   });
-  
+
+  socket.on('invitation', (data) => {
+    io.sockets.emit('invitation', data);
+  });
+
+  socket.on('create-game', async (data) => {
+    const players = [data.inviting, data.invited];
+    const white = players[Math.floor(Math.random() * players.length)];
+    const black = players.filter(p => p !== white)[0];
+    const gameID = await createNewGame(white, black);
+
+    io.sockets.emit('create-game', { id: gameID });
+  });
+
   socket.on('online', async (data) => {
     updateUserConnectionStatus(data.username, 1);
-    console.log(await getOnlineUsers());
     io.sockets.emit('online', await getOnlineUsers());
 
     socket.on('disconnect', () => {
