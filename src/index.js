@@ -112,7 +112,9 @@ const databaseCreation = async () => {
         black_player INTEGER NOT NULL,
         date TEXT NOT NULL,
         pgn TEXT,
-        fen TEXT,
+        fen TEXT NOT NULL,
+        turn INTEGER NOT NULL,
+        winner INTEGER NOT NULL,
         FOREIGN KEY (white_player) REFERENCES USER(id),
         FOREIGN KEY (black_player) REFERENCES USER(id)
       );
@@ -263,8 +265,8 @@ const createNewGame = async (white, black) => {
     let whiteID = await db.get('SELECT id FROM USER WHERE username = ?', [white]);
     let blackID = await db.get('SELECT id FROM USER WHERE username = ?', [black]);
     await db.run(
-      'INSERT INTO GAME(white_player, black_player, date, fen) VALUES(?, ?, ?, ?)', 
-      [whiteID.id, blackID.id, date, 'bbbb/bbb/bbbb/3/wwww/www/wwww']
+      'INSERT INTO GAME(white_player, black_player, date, fen, turn, winner) VALUES(?, ?, ?, ?, ?, ?)', 
+      [whiteID.id, blackID.id, date, 'bbbb/bbb/bbbb/3/wwww/www/wwww', 1, 0]
     );
     id = await db.get(
       'SELECT id FROM GAME WHERE date = ?', 
@@ -283,7 +285,6 @@ const getGameInfo = async (id) => {
   let game;
   let white;
   let black;
-  console.log(id);
   try {
     db = await sqliteAsync.open('LASCA.sqlite3');
   } catch (err) {
@@ -316,7 +317,7 @@ const getGameInfo = async (id) => {
 
   db.close();
 
-  return { id: game.id, whitep: white.username, blackp: black.username, pgn: game.pgn, fen: game.fen };
+  return { id: game.id, whitep: white.username, blackp: black.username, pgn: game.pgn, fen: game.fen, turn: game.turn, winner: game.winner };
 };
 
 // Database

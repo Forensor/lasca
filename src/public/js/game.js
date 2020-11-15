@@ -12,6 +12,19 @@ let flipped = false;
 let positions = [];
 let moves = [];
 
+const translateFEN = (fen) => {
+    let row = 0;
+    let col = 0;
+    let gen = [];
+    let genr = [];
+    for (let i = 0; i < fen.length; i++) {
+        if (fen[i] == b) {
+
+        }
+    }
+    return gen;
+};
+
 socket.emit('game-room', { id: document.getElementById('gameid').innerHTML });
 
 let fen = 'bbbb/bbb/bbbb/3/wwww/www/wwww';
