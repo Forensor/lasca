@@ -1,0 +1,81 @@
+/* IDs */
+#preferences {
+    position: absolute;
+    top: 30px;
+    right: 5px;
+    z-index: 2;
+    padding: 5px;
+    min-width: 150px;
+}
+
+#gear {
+    position: absolute;
+    cursor: pointer;
+    top: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    background-image: url("../img/ui/gear.svg");
+    background-size: cover;
+    opacity: 0.5;
+}
+
+#gear:hover {
+    opacity: 1;
+}
+
+#board {
+    width: 490px;
+    height: 490px;
+    background-size: cover;
+    border: 10px solid #CDA871;
+}
+
+#main {
+    width: 800px;
+	height: 600px;
+	position: absolute;
+	top:0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+    margin: auto;
+}
+
+#board-border {
+    width: 510px;
+    height: 510px;
+    border: 10px solid #553E2B;
+}
+
+#playground {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 20px;
+}
+
+#game-info {
+    padding: 5px;
+    -webkit-user-select: text;
+}
+
+#board {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, 1fr);
+}
+/* Classes */
+.preferences-option {
+    padding-left: 10px;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.preferences-option:hover {
+    background-color:  #0063B1;
+    color: white;
+}
+
+.selected-option {
+    background-color:  #eeeeee;
+}

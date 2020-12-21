@@ -1,0 +1,68 @@
+/* IDs */
+#main {
+    width: 500px;
+	height: 375px;
+	position: absolute;
+	top:0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+    margin: auto;
+}
+
+#challenger {
+    padding: 5px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    height: 300px;
+    column-gap: 5px;
+    position: relative;
+}
+
+#challenge-display {
+    overflow-y: auto;
+    height: 275px;
+}
+
+#challenge-display p {
+    border-top: 1px solid rgb(180, 180, 180);
+    -webkit-user-select: text;
+}
+
+#challenge-form {
+    position: relative;
+    text-align: center;
+    margin-top: 50px;
+}
+
+#challenge-form div {
+    width: 75%;
+    margin: auto;
+    text-align: left;
+}
+
+#challenge-form input {
+    height: 20px;
+    padding: 5px 2px;
+    width: calc(100% - 8px);
+}
+
+#challenge-form button {
+    font-size: 16px;
+    padding: 5px 10px;
+    width: 89px;
+    border: 0;
+    cursor: pointer;
+    background-color: #0063B1;
+    color: white;
+    border-radius: 2px;
+    outline: none;
+}
+
+#challenge-form button:hover {
+    opacity: 0.7;
+}
+
+#challenge-form p {
+    margin-block-end: 0;
+}

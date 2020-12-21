@@ -3,57 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" type="image/png" href="favicon-32x32.png">
-    <link rel="stylesheet" href="css/styles.css">
-    <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
-    <title>onlasca.org • Lasker's game</title>
+    <link rel="stylesheet" href="css/shared.css">
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+    <title>onlasca.org • lasker's game</title>
 </head>
 <body>
-    <div id="app">
-        <header>
-            <div id="userlogged" style="visibility: hidden; height: 0px; width: 0px;"><%= username %></div>
-            <div id="title">
-                <a href="/">onlasca.org</a>
-            </div>
-            <div id="links">
+    <div id="main">
+        <div id="panel">
+            <header><p class="title"><a href="/">onlasca.org</a></p></header>
+            <nav>
                 <ul>
-                    <% if (username != 'anonymous') { %>
-                        <li><a href="/@/<%= username %>"><%= username %></a></li>
-                        <li><a href="/logout">LOG OUT</a></li>
-                    <% } else { %>
-                        <li><a href="/login">LOG IN</a></li>
-                        <li><a href="/register">REGISTER</a></li>
-                    <% } %>
+                    <li><a href="/">challenge</a></li>
+                    <li><a href="/rules">rules</a></li>
+                    <li><a href="/about">about</a></li>
                 </ul>
-            </div>
-        </header>
-        <% if (message.length > 0) { %>
-            <div id="success" class="fade">
-                <%= message %>
-            </div>
-            <script>
-                let successDiv = document.getElementById('success');
-                setInterval(() => {
-                  successDiv.style.opacity -= .1
-                  if (successDiv.style.opacity <= -0.5) {
-                      successDiv.remove();
-                      clearInterval();
-                  }
-                }, 1000);
-            </script>
-        <% } %>
-        <div id="homepage">
-            Welcome to onlasca.org!
-            <br><br>
-            Online users:
-            <br><br>
-            <div id="onlineusers"></div>
+            </nav>
         </div>
-        <div id="invitations"></div>
+        <section id="challenger" class="shadowed">
+            <div>
+                <div><p><b>open challenges</b></p></div>
+                <div id="challenge-display" class="shadowed">
+                    <p>GAME - roberzyx</p>
+                    <p>GAME - roberzyx</p>
+                    <p>GAME - roberzyx</p>
+                    <p>GAME - roberzyx</p>
+                    <p>GAME - roberzyx</p>
+                    <p>GAME - roberzyx</p>
+                </div>
+            </div>
+            <form id="challenge-form">
+                <div>
+                    <p><b>challenge</b></p>
+                    <input type="text" placeholder="enter the challenge name..." />
+                    <br><br>
+                    <p><b>player</b></p>
+                    <input type="text" placeholder="enter your player name..." />
+                    <br><br>
+                    <button id="create" class="shadowed">create</button>
+                    <button id="join" class="shadowed">join</button>
+                </div>
+            </form>
+        </section>
     </div>
 
     <!-- Scripts -->
     <script src="/socket.io/socket.io.js"></script>
-    <script src="js/online-users.js"></script>
 </body>
 </html>
