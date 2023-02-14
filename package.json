@@ -1,0 +1,28 @@
+{
+    "name": "lasca",
+    "version": "0.1.0",
+    "description": "⚫ lasca - Emanuel Lasker's game for everyone ⚫",
+    "main": "index.js",
+    "repository": "https://github.com/forensor/lasca",
+    "author": "Álvaro Sánchez <forensor@hotmail.com>",
+    "license": "MIT",
+    "scripts": {
+        "format": "prettier -w .",
+        "postinstall": "elm-tooling install"
+    },
+    "devDependencies": {
+        "elm": "^0.19.1-5",
+        "elm-format": "^0.8.5",
+        "elm-review": "^2.9.1",
+        "elm-test-rs": "^3.0.0-3",
+        "elm-tooling": "^1.12.0",
+        "eslint": "^8.34.0",
+        "postcss": "^8.4.21",
+        "prettier": "^2.8.4",
+        "prettier-plugin-elm": "^0.9.0",
+        "tailwindcss": "^3.2.6",
+        "typescript": "^4.9.5",
+        "vite": "^4.1.1",
+        "vite-plugin-elm": "^2.8.0-beta.3"
+    }
+}

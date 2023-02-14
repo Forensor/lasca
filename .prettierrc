@@ -1,0 +1,7 @@
+{
+    "plugins": ["prettier-plugin-elm"],
+    "printWidth": 90,
+    "tabWidth": 4,
+    "trailingComma": "none",
+    "semi": false
+}
