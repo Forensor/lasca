@@ -3,13 +3,15 @@ module.exports = {
     content: ["./index.html", "./src/**/*.{js,ts,elm}"],
     theme: {
         extend: {
-            fontFamily: {
-                raleway: ["Raleway", "sans-serif"]
-            },
             colors: {
-                "columbia-blue": "#cee5f2",
-                "dark-electric-blue": "#637081",
-                "cerulean-frost": "#7c98b3"
+                jet: "#363636",
+                gunmetal: "#242f40",
+                "satin-sheen-gold": "#cca43b",
+                platinum: "#e5e5e5",
+                white: "#ffffff"
+            },
+            backgroundImage: {
+                board: "url('./board.svg')"
             }
         }
     },

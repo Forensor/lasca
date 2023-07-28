@@ -3,5 +3,6 @@ import { plugin as elm } from "vite-plugin-elm"
 
 export default defineConfig({
     plugins: [elm({})],
-    root: "src/"
+    root: "src/",
+    publicDir: "../res/"
 })
