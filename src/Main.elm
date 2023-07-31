@@ -1,6 +1,6 @@
 module Main exposing (main)
 
-import Board exposing (Board, Coord(..), Counter, Piece, Role(..), Team(..), coordToString)
+import Board
 import Browser exposing (Document, UrlRequest(..))
 import Browser.Navigation as Nav
 import Dict.Any as AnyDict exposing (AnyDict)
@@ -29,8 +29,8 @@ view : Model -> Document Msg
 view _ =
     { title = "lasca"
     , body =
-        [ Board.view
-            Board.defaultBoard
+        [ Board.viewGame
+            Board.defaultGame
         ]
     }
 

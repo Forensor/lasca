@@ -4,11 +4,12 @@ import Dict.Any as AnyDict exposing (AnyDict)
 import Html exposing (Html)
 import Html.Attributes as Attrs
 import List.NonEmpty as NonEmpty exposing (NonEmpty)
+import Set.Any as AnySet exposing (AnySet)
 import Svg
 import Svg.Attributes as SvgAttrs
 
 
-{-| Position code for the pieces on the `Board`.
+{-| Position code for the `Piece`s over the `Board`.
 
 This follows the usual
 [draughts board's coordinates distribution](https://pjb.com.au/laska/laskers_rules.html).
@@ -42,29 +43,49 @@ type Coord
     | S25
 
 
+{-| The two sides of the match.
+
+`White` always starts first.
+
+-}
 type Team
     = White
     | Black
 
 
+{-| The role of a given `Counter`.
+
+`Soldier`s can only move forward, but `Officer`s are able to go to any `Direction`.
+
+-}
 type Role
     = Soldier
     | Officer
 
 
+{-| A single "man" of a `Piece`.
+-}
 type alias Counter =
     { team : Team
     , role : Role
     }
 
 
-{-| `Piece`s are stacks of `Counter`s. The head of the `NonEmpty` represents the topmost
-`Counter` of the stack, which designs the `Team` and the `Role` of it.
+{-| A stack of `Counter`s.
+
+The head of the `NonEmpty` represents the topmost `Counter` of the stack, which designs
+the `Team` and the `Role` of it.
+
 -}
 type alias Piece =
     NonEmpty Counter
 
 
+{-| Game position represented by an `AnyDict`.
+
+Any `Coord` not present in the dictionary means that the square is empty.
+
+-}
 type alias Board =
     AnyDict String Coord Piece
 
@@ -81,34 +102,98 @@ type Direction
     | DownRight
 
 
-allCoords : List Coord
+type alias Game =
+    { board : Board
+    , turn : Team
+    }
+
+
+type alias Capture =
+    { origin : Coord
+    , capturee : Coord
+    , destination : Coord
+    }
+
+
+type alias Move =
+    { origin : Coord
+    , destination : Coord
+    }
+
+
+allCoords : AnySet String Coord
 allCoords =
-    [ S1
-    , S2
-    , S3
-    , S4
-    , S5
-    , S6
-    , S7
-    , S8
-    , S9
-    , S10
-    , S11
-    , S12
-    , S13
-    , S14
-    , S15
-    , S16
-    , S17
-    , S18
-    , S19
-    , S20
-    , S21
-    , S22
-    , S23
-    , S24
-    , S25
-    ]
+    AnySet.fromList coordToString
+        [ S1
+        , S2
+        , S3
+        , S4
+        , S5
+        , S6
+        , S7
+        , S8
+        , S9
+        , S10
+        , S11
+        , S12
+        , S13
+        , S14
+        , S15
+        , S16
+        , S17
+        , S18
+        , S19
+        , S20
+        , S21
+        , S22
+        , S23
+        , S24
+        , S25
+        ]
+
+
+allDirections : AnySet String Direction
+allDirections =
+    AnySet.fromList directionToString
+        [ UpLeft
+        , UpRight
+        , DownLeft
+        , DownRight
+        ]
+
+
+counterDirections : AnyDict String Direction (AnySet String Counter)
+counterDirections =
+    AnyDict.fromList directionToString
+        [ ( UpLeft
+          , AnySet.fromList counterToString
+                [ { team = White, role = Soldier }
+                , { team = White, role = Officer }
+                , { team = Black, role = Officer }
+                ]
+          )
+        , ( UpRight
+          , AnySet.fromList counterToString
+                [ { team = White, role = Soldier }
+                , { team = White, role = Officer }
+                , { team = Black, role = Officer }
+                ]
+          )
+        , ( DownLeft
+          , AnySet.fromList counterToString
+                [ { team = Black, role = Soldier }
+                , { team = White, role = Officer }
+                , { team = Black, role = Officer }
+                ]
+          )
+        , ( DownRight
+          , AnySet.fromList counterToString
+                [ { team = Black, role = Soldier }
+                , { team = White, role = Officer }
+                , { team = Black, role = Officer }
+                ]
+          )
+        ]
 
 
 {-| Default starting position `Board`.
@@ -139,6 +224,237 @@ defaultBoard =
         , ( S24, ( { team = Black, role = Soldier }, [] ) )
         , ( S25, ( { team = Black, role = Soldier }, [] ) )
         ]
+
+
+defaultTurn : Team
+defaultTurn =
+    White
+
+
+defaultGame : Game
+defaultGame =
+    { board = defaultBoard
+    , turn = defaultTurn
+    }
+
+
+{-| Returns a `Capture` if possible, given the desired `Coord` and `Direction`.
+
+For a `Capture` to be possible, these conditions need to be met:
+
+  - Origin piece `Team` must belong to the current turn
+  - Origin piece `Role` can move to the desired direction
+  - Piece captured must belong to the opposite `Team`
+  - Destination `Coord` must be unoccupied
+  - Capturee `Coord` must not be excluded (i.e. it mustn't have been captured before)
+
+-}
+getMaybeCaptureByCoordAndDirection :
+    Game
+    -> AnySet String Coord
+    -> Coord
+    -> Direction
+    -> Maybe Capture
+getMaybeCaptureByCoordAndDirection game excludedCaptureeCoords coord direction =
+    let
+        maybeCaptureeCoord : Maybe Coord
+        maybeCaptureeCoord =
+            getAdjacentCoordByDirection coord direction
+
+        maybeDestinationCoord : Maybe Coord
+        maybeDestinationCoord =
+            maybeCaptureeCoord
+                |> Maybe.andThen
+                    (\captureeCoord ->
+                        getAdjacentCoordByDirection captureeCoord direction
+                    )
+
+        maybeOriginTopmostCounter : Maybe Counter
+        maybeOriginTopmostCounter =
+            AnyDict.get coord game.board
+                |> Maybe.map NonEmpty.head
+
+        originPieceBelongsToCurrentTurn : Bool
+        originPieceBelongsToCurrentTurn =
+            maybeOriginTopmostCounter
+                |> Maybe.map (.team >> (==) game.turn)
+                |> Maybe.withDefault False
+
+        originPieceCanMoveToDesiredDirection : Bool
+        originPieceCanMoveToDesiredDirection =
+            maybeOriginTopmostCounter
+                |> Maybe.andThen
+                    (\originTopmostCounter ->
+                        AnyDict.get direction counterDirections
+                            |> Maybe.map (AnySet.member originTopmostCounter)
+                    )
+                |> Maybe.withDefault False
+
+        captureeBelongsToTheOppositeTeam : Bool
+        captureeBelongsToTheOppositeTeam =
+            maybeCaptureeCoord
+                |> Maybe.andThen
+                    (\captureeCoord ->
+                        AnyDict.get captureeCoord game.board
+                    )
+                |> Maybe.map (getPieceTeam >> (/=) game.turn)
+                |> Maybe.withDefault False
+
+        destinationIsUnoccupied : Bool
+        destinationIsUnoccupied =
+            maybeDestinationCoord
+                |> Maybe.andThen
+                    (\destinationCoord ->
+                        AnyDict.get destinationCoord game.board
+                    )
+                |> (==) Nothing
+
+        captureeCoordIsNotExcluded : Bool
+        captureeCoordIsNotExcluded =
+            maybeCaptureeCoord
+                |> Maybe.map
+                    (\captureeCoord ->
+                        AnySet.member captureeCoord excludedCaptureeCoords
+                            |> not
+                    )
+                |> Maybe.withDefault False
+
+        allCaptureConditionsAreMet : Bool
+        allCaptureConditionsAreMet =
+            List.all ((==) True)
+                [ originPieceBelongsToCurrentTurn
+                , originPieceCanMoveToDesiredDirection
+                , captureeBelongsToTheOppositeTeam
+                , destinationIsUnoccupied
+                , captureeCoordIsNotExcluded
+                ]
+    in
+    if allCaptureConditionsAreMet then
+        Maybe.map2
+            (\captureeCord destinationCoord ->
+                { origin = coord
+                , capturee = captureeCord
+                , destination = destinationCoord
+                }
+            )
+            maybeCaptureeCoord
+            maybeDestinationCoord
+
+    else
+        Nothing
+
+
+{-| Get all `Capture`s for every possible `Direction` on the desired `Coord`.
+-}
+getCapturesByCoord : Game -> AnySet String Coord -> Coord -> AnySet String Capture
+getCapturesByCoord game excludedCaptureeCoords coord =
+    AnySet.filterMap captureToString
+        (getMaybeCaptureByCoordAndDirection game excludedCaptureeCoords coord)
+        allDirections
+
+
+{-| Get all the possible `Capture`s for the current turn.
+-}
+getAllPossibleCaptures : Game -> AnySet String Capture
+getAllPossibleCaptures game =
+    allCoords
+        |> AnySet.toList
+        |> List.concatMap
+            (\coord ->
+                getCapturesByCoord game (AnySet.empty coordToString) coord
+                    |> AnySet.toList
+            )
+        |> AnySet.fromList captureToString
+
+
+{-| Returns a `Movve` if possible, given the desired `Coord` and `Direction`.
+
+For a `Move` to be possible, these conditions need to be met:
+
+  - Origin piece `Team` must belong to the current turn
+  - Origin piece `Role` can move to the desired direction
+  - Destination `Coord` must be unoccupied
+
+-}
+getMaybeMoveByCoordAndDirection :
+    Game
+    -> Coord
+    -> Direction
+    -> Maybe Move
+getMaybeMoveByCoordAndDirection game coord direction =
+    let
+        maybeDestinationCoord : Maybe Coord
+        maybeDestinationCoord =
+            getAdjacentCoordByDirection coord direction
+
+        maybeOriginTopmostCounter : Maybe Counter
+        maybeOriginTopmostCounter =
+            AnyDict.get coord game.board
+                |> Maybe.map NonEmpty.head
+
+        originPieceBelongsToCurrentTurn : Bool
+        originPieceBelongsToCurrentTurn =
+            maybeOriginTopmostCounter
+                |> Maybe.map (.team >> (==) game.turn)
+                |> Maybe.withDefault False
+
+        originPieceCanMoveToDesiredDirection : Bool
+        originPieceCanMoveToDesiredDirection =
+            maybeOriginTopmostCounter
+                |> Maybe.andThen
+                    (\originTopmostCounter ->
+                        AnyDict.get direction counterDirections
+                            |> Maybe.map (AnySet.member originTopmostCounter)
+                    )
+                |> Maybe.withDefault False
+
+        destinationIsUnoccupied : Bool
+        destinationIsUnoccupied =
+            maybeDestinationCoord
+                |> Maybe.andThen
+                    (\destinationCoord ->
+                        AnyDict.get destinationCoord game.board
+                    )
+                |> (==) Nothing
+
+        allMoveConditionsAreMet : Bool
+        allMoveConditionsAreMet =
+            List.all ((==) True)
+                [ originPieceBelongsToCurrentTurn
+                , originPieceCanMoveToDesiredDirection
+                , destinationIsUnoccupied
+                ]
+    in
+    if allMoveConditionsAreMet then
+        Maybe.map
+            (\destinationCoord ->
+                { origin = coord
+                , destination = destinationCoord
+                }
+            )
+            maybeDestinationCoord
+
+    else
+        Nothing
+
+
+{-| Get all `Move`s for every possible `Direction` on the desired `Coord`.
+-}
+getMovesByCoord : Game -> Coord -> AnySet String Move
+getMovesByCoord game coord =
+    AnySet.filterMap moveToString
+        (getMaybeMoveByCoordAndDirection game coord)
+        allDirections
+
+
+getPieceTeam : Piece -> Team
+getPieceTeam ( topmostCounter, _ ) =
+    topmostCounter.team
+
+
+getPieceRole : Piece -> Role
+getPieceRole ( topmostCounter, _ ) =
+    topmostCounter.role
 
 
 {-| Get a reachable square `Cord` by `Direction`. Note that not all squares reach another
@@ -263,8 +579,7 @@ getAdjacentCoordByDirection coord direction =
                 , ( ( S25, DownLeft ), S21 )
                 ]
     in
-    directionsDict
-        |> AnyDict.get ( coord, direction )
+    AnyDict.get ( coord, direction ) directionsDict
 
 
 {-| Get _svg_'s _stroke_ and _fill_ values for `Piece` view styles.
@@ -299,6 +614,22 @@ directionToString direction =
 
         DownRight ->
             "DownRight"
+
+
+counterToString : Counter -> String
+counterToString { team, role } =
+    case ( team, role ) of
+        ( White, Soldier ) ->
+            "w"
+
+        ( Black, Soldier ) ->
+            "b"
+
+        ( White, Officer ) ->
+            "W"
+
+        ( Black, Officer ) ->
+            "B"
 
 
 coordToString : Coord -> String
@@ -378,6 +709,42 @@ coordToString coord =
 
         S25 ->
             "S25"
+
+
+{-| Converts a `Capture` to a
+[_Standard Algebraic Notation_](https://en.wikipedia.org/wiki/Algebraic_notation_(chess))
+`String`.
+
+Example:
+
+```
+captureToString { origin = S1, capturee = S5, destination = S9 }
+    -- -> "1-5-9"
+```
+
+-}
+captureToString : Capture -> String
+captureToString { origin, capturee, destination } =
+    List.map (coordToString >> String.dropLeft 1) [ origin, capturee, destination ]
+        |> String.join "-"
+
+
+{-| Converts a `Move` to a
+[_Standard Algebraic Notation_](https://en.wikipedia.org/wiki/Algebraic_notation_(chess))
+`String`.
+
+Example:
+
+```
+moveToString { origin = S1, destination = S5 }
+    -- -> "1-5"
+```
+
+-}
+moveToString : Move -> String
+moveToString { origin, destination } =
+    List.map (coordToString >> String.dropLeft 1) [ origin, destination ]
+        |> String.join "-"
 
 
 {-| Get CSS _top_ and _left_ values for `Piece` view styles.
@@ -476,7 +843,7 @@ viewPiece coord piece =
                 [ "top: " ++ String.fromInt top ++ "px;"
                 , "left: " ++ String.fromInt left ++ "px;"
                 ]
-        , Attrs.id <| coordToString coord
+        , Attrs.class <| coordToString coord
         ]
         (piece
             |> NonEmpty.indexedMap
@@ -495,9 +862,12 @@ viewPiece coord piece =
         )
 
 
-{-| Render a single `Counter`. _stroke_ and _fill_ colors for the _svg_ are based on the
-`Team`/`Role` combo. _bottom_ CSS property is based on `positionOnStack`, the higher the
-value, the higher the `Counter` will be.
+{-| Render a single `Counter`.
+
+_Stroke_ and _fill_ colors for the _svg_ are based on the `Team`/`Role` combo. _Bottom_
+CSS property is based on `positionOnStack`, the higher the value, the higher the
+`Counter` will be.
+
 -}
 viewCounter : { positionOnStack : Int } -> Counter -> Html msg
 viewCounter { positionOnStack } counter =
@@ -564,7 +934,9 @@ viewCounter { positionOnStack } counter =
 view : Board -> Html msg
 view board =
     Html.div
-        [ Attrs.class "w-[490px] h-[490px] bg-board bg-no-repeat bg-cover relative" ]
+        [ Attrs.class
+            "board w-[490px] h-[490px] bg-board bg-no-repeat bg-cover relative"
+        ]
         (board
             |> AnyDict.toList
             |> List.map
@@ -572,3 +944,25 @@ view board =
                     viewPiece coord piece
                 )
         )
+
+
+viewGame : Game -> Html msg
+viewGame game =
+    view game.board
+
+
+viewMoveDestination : Coord -> Html msg
+viewMoveDestination coord =
+    let
+        { top, left } =
+            getBoardPositionByCoord coord
+    in
+    Html.div
+        [ Attrs.class "move-destination w-[70px] h-[70px]"
+        , SvgAttrs.style <|
+            String.join " "
+                [ "top: " ++ String.fromInt top ++ "px;"
+                , "left: " ++ String.fromInt left ++ "px;"
+                ]
+        ]
+        []
