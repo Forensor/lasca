@@ -1,12 +1,8 @@
 module Main exposing (main)
 
-import Board
 import Browser exposing (Document, UrlRequest(..))
 import Browser.Navigation as Nav
-import Dict.Any as AnyDict exposing (AnyDict)
-import Html exposing (Html)
-import Html.Attributes as Attrs
-import List.NonEmpty as NonEmpty exposing (NonEmpty)
+import Game
 import Url exposing (Url)
 
 
@@ -29,8 +25,8 @@ view : Model -> Document Msg
 view _ =
     { title = "lasca"
     , body =
-        [ Board.viewGame
-            Board.defaultGame
+        [ Game.view
+            Game.defaultGame
         ]
     }
 
