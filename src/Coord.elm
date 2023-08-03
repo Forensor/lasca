@@ -157,83 +157,83 @@ toString coord =
 
 {-| Get CSS _top_ and _left_ values for `Board` elements' view styles.
 -}
-topAndLeftValues : Coord -> { top : Int, left : Int }
-topAndLeftValues coord =
+topAndLeftValues : { pieceSize : Int } -> Coord -> { top : Int, left : Int }
+topAndLeftValues { pieceSize } coord =
     case coord of
         S1 ->
-            { top = 420, left = 0 }
+            { top = pieceSize * 6, left = 0 }
 
         S2 ->
-            { top = 420, left = 140 }
+            { top = pieceSize * 6, left = pieceSize * 2 }
 
         S3 ->
-            { top = 420, left = 280 }
+            { top = pieceSize * 6, left = pieceSize * 4 }
 
         S4 ->
-            { top = 420, left = 420 }
+            { top = pieceSize * 6, left = pieceSize * 6 }
 
         S5 ->
-            { top = 350, left = 70 }
+            { top = pieceSize * 5, left = pieceSize }
 
         S6 ->
-            { top = 350, left = 210 }
+            { top = pieceSize * 5, left = pieceSize * 3 }
 
         S7 ->
-            { top = 350, left = 350 }
+            { top = pieceSize * 5, left = pieceSize * 5 }
 
         S8 ->
-            { top = 280, left = 0 }
+            { top = pieceSize * 4, left = 0 }
 
         S9 ->
-            { top = 280, left = 140 }
+            { top = pieceSize * 4, left = pieceSize * 2 }
 
         S10 ->
-            { top = 280, left = 280 }
+            { top = pieceSize * 4, left = pieceSize * 4 }
 
         S11 ->
-            { top = 280, left = 420 }
+            { top = pieceSize * 4, left = pieceSize * 6 }
 
         S12 ->
-            { top = 210, left = 70 }
+            { top = pieceSize * 3, left = pieceSize }
 
         S13 ->
-            { top = 210, left = 210 }
+            { top = pieceSize * 3, left = pieceSize * 3 }
 
         S14 ->
-            { top = 210, left = 350 }
+            { top = pieceSize * 3, left = pieceSize * 5 }
 
         S15 ->
-            { top = 140, left = 0 }
+            { top = pieceSize * 2, left = 0 }
 
         S16 ->
-            { top = 140, left = 140 }
+            { top = pieceSize * 2, left = pieceSize * 2 }
 
         S17 ->
-            { top = 140, left = 280 }
+            { top = pieceSize * 2, left = pieceSize * 4 }
 
         S18 ->
-            { top = 140, left = 420 }
+            { top = pieceSize * 2, left = pieceSize * 6 }
 
         S19 ->
-            { top = 70, left = 70 }
+            { top = pieceSize, left = pieceSize }
 
         S20 ->
-            { top = 70, left = 210 }
+            { top = pieceSize, left = pieceSize * 3 }
 
         S21 ->
-            { top = 70, left = 350 }
+            { top = pieceSize, left = pieceSize * 5 }
 
         S22 ->
             { top = 0, left = 0 }
 
         S23 ->
-            { top = 0, left = 140 }
+            { top = 0, left = pieceSize * 2 }
 
         S24 ->
-            { top = 0, left = 280 }
+            { top = 0, left = pieceSize * 4 }
 
         S25 ->
-            { top = 0, left = 420 }
+            { top = 0, left = pieceSize * 6 }
 
 
 {-| Get a reachable square `Cord` by `Direction`. Note that not all squares reach another

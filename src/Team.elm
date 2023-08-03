@@ -1,4 +1,4 @@
-module Team exposing (Team(..), defaultTeam)
+module Team exposing (Team(..), defaultTeam, toString)
 
 {-| The two sides of the match.
 
@@ -15,3 +15,13 @@ type Team
 defaultTeam : Team
 defaultTeam =
     White
+
+
+toString : Team -> String
+toString team =
+    case team of
+        White ->
+            "White"
+
+        Black ->
+            "Black"

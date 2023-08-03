@@ -2,45 +2,156 @@ module Main exposing (main)
 
 import Browser exposing (Document, UrlRequest(..))
 import Browser.Navigation as Nav
-import Game
+import Html
+import Page.Analysis
+import Page.Game
+import Page.Home
+import Page.Rules
+import Route exposing (Route)
+import Session exposing (Session)
 import Url exposing (Url)
 
 
 type Msg
-    = NoOp String
-    | UrlChange Url
+    = UrlChange Url
     | UrlRequest UrlRequest
+    | HomeMsg Page.Home.Msg
+    | GameMsg Page.Game.Msg
+    | RulesMsg Page.Rules.Msg
+    | AnalysisMsg Page.Analysis.Msg
 
 
-type alias Model =
-    {}
+type Model
+    = Home Page.Home.Model
+    | Game Page.Game.Model
+    | Rules Page.Rules.Model
+    | Analysis Page.Analysis.Model
+    | Redirect Session
 
 
 init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
-init _ _ _ =
-    ( {}, Cmd.none )
+init flags url navKey =
+    changeRoute (Route.fromUrl url) (Redirect (Session.defaultSession navKey))
+
+
+modelToSession : Model -> Session
+modelToSession model =
+    case model of
+        Home { session } ->
+            session
+
+        Game { session } ->
+            session
+
+        Rules { session } ->
+            session
+
+        Analysis { session } ->
+            session
+
+        Redirect session ->
+            session
+
+
+changeRoute : Maybe Route -> Model -> ( Model, Cmd Msg )
+changeRoute maybeRoute model =
+    let
+        session : Session
+        session =
+            modelToSession model
+    in
+    case maybeRoute of
+        Nothing ->
+            ( model, Cmd.none )
+
+        Just Route.Home ->
+            Page.Home.init session
+                |> Tuple.mapBoth Home (Cmd.map HomeMsg)
+
+        Just (Route.Game _) ->
+            Page.Game.init session
+                |> Tuple.mapBoth Game (Cmd.map GameMsg)
+
+        Just Route.Rules ->
+            Page.Rules.init session
+                |> Tuple.mapBoth Rules (Cmd.map RulesMsg)
+
+        Just Route.Analysis ->
+            Page.Analysis.init session
+                |> Tuple.mapBoth Analysis (Cmd.map AnalysisMsg)
 
 
 view : Model -> Document Msg
-view _ =
-    { title = "lasca"
-    , body =
-        [ Game.view
-            Game.defaultGame
-        ]
-    }
+view model =
+    let
+        viewPage : Document Msg
+        viewPage =
+            case model of
+                Home homeModel ->
+                    let
+                        { title, body } =
+                            Page.Home.view homeModel
+                    in
+                    { title = title
+                    , body = List.map (Html.map HomeMsg) body
+                    }
+
+                Game gameModel ->
+                    let
+                        { title, body } =
+                            Page.Game.view gameModel
+                    in
+                    { title = title
+                    , body = List.map (Html.map GameMsg) body
+                    }
+
+                Rules rulesModel ->
+                    let
+                        { title, body } =
+                            Page.Rules.view rulesModel
+                    in
+                    { title = title
+                    , body = List.map (Html.map HomeMsg) body
+                    }
+
+                Analysis analysisModel ->
+                    let
+                        { title, body } =
+                            Page.Analysis.view analysisModel
+                    in
+                    { title = title
+                    , body = List.map (Html.map AnalysisMsg) body
+                    }
+
+                Redirect _ ->
+                    { title = "lasca - Redirecting..."
+                    , body = []
+                    }
+    in
+    viewPage
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        NoOp _ ->
-            ( model, Cmd.none )
+    case ( msg, model ) of
+        ( UrlChange url, _ ) ->
+            changeRoute (Route.fromUrl url) model
 
-        UrlChange _ ->
-            ( model, Cmd.none )
+        ( UrlRequest urlRequest, _ ) ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model
+                    , Nav.pushUrl
+                        (modelToSession model
+                            |> .navKey
+                        )
+                        (Url.toString url)
+                    )
 
-        UrlRequest _ ->
+                Browser.External url ->
+                    ( model, Nav.load url )
+
+        _ ->
             ( model, Cmd.none )
 
 

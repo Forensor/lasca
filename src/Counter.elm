@@ -104,22 +104,33 @@ _Stroke_ and _fill_ colors for the _svg_ are based on the `Team`/`Role` combo. _
 CSS property is based on `positionOnStack`, the higher the value, the higher the
 `Counter` will be.
 
+Default height/width is _70px_, thus it's always best to use `counterSize`s that are
+divisible by `70`.
+
 -}
-view : { positionOnStack : Int } -> Counter -> Html msg
-view { positionOnStack } counter =
+view : { positionOnStack : Int, counterSize : Int } -> Counter -> Html msg
+view { positionOnStack, counterSize } counter =
     let
-        -- Hex colors based on Team/Role combo
+        -- Hex colors based on `Team`/`Role` combo
         { stroke, fill } =
             hexColors counter
+
+        {- Height of the edge of a `Counter`, to beautifully stack one on top of each
+           other
+        -}
+        counterEdgeHeight : Int
+        counterEdgeHeight =
+            counterSize // 7
 
         -- How much px we apply to bottom CSS property
         marginByPosition : Int
         marginByPosition =
-            positionOnStack * 10
+            positionOnStack * counterEdgeHeight
     in
     Svg.svg
-        [ SvgAttrs.width "70"
-        , SvgAttrs.height "70"
+        [ SvgAttrs.width <| String.fromInt counterSize
+        , SvgAttrs.height <| String.fromInt counterSize
+        , SvgAttrs.viewBox "0 0 70 70"
         , SvgAttrs.style <|
             String.join " "
                 [ "bottom: " ++ String.fromInt marginByPosition ++ "px;"

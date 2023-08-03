@@ -1,4 +1,4 @@
-module Game exposing (Game, defaultGame, view)
+module Game exposing (Game, defaultGame, getAllPossibleCaptures, getMovesByCoord)
 
 import Board exposing (Board)
 import Capture exposing (Capture)
@@ -7,7 +7,6 @@ import Counter exposing (Counter)
 import Dict.Any as AnyDict
 import Direction exposing (Direction)
 import Html exposing (Html)
-import Html.Attributes as Attrs
 import List.NonEmpty as NonEmpty
 import Move exposing (Move)
 import Piece
@@ -235,10 +234,3 @@ getMovesByCoord game coord =
     AnySet.filterMap Move.toString
         (getMaybeMoveByCoordAndDirection game coord)
         Direction.allDirections
-
-
-view : Game -> Html msg
-view game =
-    Html.node "game"
-        [ Attrs.class "game block" ]
-        [ Board.view game.board ]

@@ -1,9 +1,11 @@
-module Piece exposing (Piece, role, team, view)
+module Piece exposing (Msg, Piece, defaultSize, role, team, view)
 
 import Coord exposing (Coord)
 import Counter exposing (Counter)
 import Html exposing (Html)
 import Html.Attributes as Attrs
+import Html.Events as Events
+import Json.Decode as Decode
 import List.NonEmpty as NonEmpty exposing (NonEmpty)
 import Role exposing (Role)
 import Svg.Attributes as SvgAttrs
@@ -20,6 +22,16 @@ type alias Piece =
     NonEmpty Counter
 
 
+type Msg
+    = DragPiece Coord
+    | DropPiece Coord
+
+
+defaultSize : Int
+defaultSize =
+    70
+
+
 team : Piece -> Team
 team ( topmostCounter, _ ) =
     topmostCounter.team
@@ -31,15 +43,19 @@ role ( topmostCounter, _ ) =
 
 
 {-| Render a `Piece` on a specific `Coord`.
+
+Configuration allows you to set custom `pieceSize`, which affects the size of the whole
+`Board`.
+
 -}
-view : Coord -> Piece -> Html msg
-view coord piece =
+view : { pieceSize : Int } -> Coord -> Piece -> Html Msg
+view { pieceSize } coord piece =
     let
         { top, left } =
-            Coord.topAndLeftValues coord
+            Coord.topAndLeftValues { pieceSize = pieceSize } coord
     in
     Html.node "piece"
-        [ Attrs.class "piece block w-[70px] h-[70px] absolute"
+        [ Attrs.class "piece block absolute cursor-pointer"
 
         {- For some reason `Html.Attributes.style` doesn't work with this, neither does
            tailwindcss, so this is a workaround...
@@ -48,8 +64,12 @@ view coord piece =
             String.join " "
                 [ "top: " ++ String.fromInt top ++ "px;"
                 , "left: " ++ String.fromInt left ++ "px;"
+                , "height: " ++ String.fromInt pieceSize ++ "px;"
+                , "width: " ++ String.fromInt pieceSize ++ "px;"
                 ]
         , Attrs.class <| Coord.toString coord
+        , Events.onMouseDown <| DragPiece coord
+        , Events.onMouseUp <| DropPiece coord
         ]
         (piece
             |> NonEmpty.indexedMap
@@ -62,7 +82,11 @@ view coord piece =
                         positionOnStack =
                             (NonEmpty.length piece - 1) - index
                     in
-                    Counter.view { positionOnStack = positionOnStack } counter
+                    Counter.view
+                        { positionOnStack = positionOnStack
+                        , counterSize = pieceSize
+                        }
+                        counter
                 )
             |> NonEmpty.toList
         )

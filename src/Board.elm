@@ -1,4 +1,4 @@
-module Board exposing (Board, defaultBoard, view)
+module Board exposing (Board, Msg, defaultBoard, view)
 
 import Coord exposing (Coord)
 import Dict.Any as AnyDict exposing (AnyDict)
@@ -17,6 +17,10 @@ Any `Coord` not present in the dictionary means that the square is empty.
 -}
 type alias Board =
     AnyDict String Coord Piece
+
+
+type Msg
+    = PieceMsg Piece.Msg
 
 
 {-| Default starting position `Board`.
@@ -49,33 +53,46 @@ defaultBoard =
         ]
 
 
-view : Board -> Html msg
-view board =
+view : { pieceSize : Int } -> Board -> Html Msg
+view { pieceSize } board =
+    let
+        sizeByPieceSize : Int
+        sizeByPieceSize =
+            pieceSize * 7
+    in
     Html.node "board"
-        [ Attrs.class
-            "board block w-[490px] h-[490px] bg-board bg-no-repeat bg-cover relative"
+        [ Attrs.class "board block relative"
+        , SvgAttrs.style <|
+            String.join " "
+                [ "height: " ++ String.fromInt sizeByPieceSize ++ "px;"
+                , "width: " ++ String.fromInt sizeByPieceSize ++ "px;"
+                ]
+        , Attrs.class "bg-board bg-no-repeat bg-cover rounded-[4px] shadow-lg"
         ]
         (board
             |> AnyDict.toList
             |> List.map
                 (\( coord, piece ) ->
-                    Piece.view coord piece
+                    Piece.view { pieceSize = pieceSize } coord piece
+                        |> Html.map PieceMsg
                 )
         )
 
 
-viewMoveDestination : Coord -> Html msg
-viewMoveDestination coord =
+viewMoveDestination : { pieceSize : Int } -> Coord -> Html msg
+viewMoveDestination { pieceSize } coord =
     let
         { top, left } =
-            Coord.topAndLeftValues coord
+            Coord.topAndLeftValues { pieceSize = pieceSize } coord
     in
     Html.div
-        [ Attrs.class "move-destination w-[70px] h-[70px]"
+        [ Attrs.class "move-destination"
         , SvgAttrs.style <|
             String.join " "
                 [ "top: " ++ String.fromInt top ++ "px;"
                 , "left: " ++ String.fromInt left ++ "px;"
+                , "height: " ++ String.fromInt pieceSize ++ "px;"
+                , "width: " ++ String.fromInt pieceSize ++ "px;"
                 ]
         ]
         []
