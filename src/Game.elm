@@ -1,5 +1,6 @@
 module Game exposing
     ( Game
+    , State(..)
     , defaultGame
     , getAllPossibleCaptures
     , getAllPossibleMoves
@@ -31,6 +32,7 @@ type alias Game =
     , pieceSelected : Maybe Coord
     , possibleMoves : PossibleMoves
     , excludedCaptures : AnySet String Coord
+    , state : State
     }
 
 
@@ -38,6 +40,13 @@ type alias ShortGame =
     { board : Board
     , turn : Team
     }
+
+
+type State
+    = Init
+    | Ongoing
+    | NoPiecesLeft Team
+    | NoPossibleMoves Team
 
 
 defaultGame : Game
@@ -57,6 +66,7 @@ defaultGame =
                 ]
             )
     , excludedCaptures = AnySet.empty Coord.toString
+    , state = Init
     }
 
 
@@ -337,12 +347,24 @@ makeMove game move =
 
                     else
                         PossibleMoves.None
+
+                newState : State
+                newState =
+                    if currentTurnHasNoPieces { board = newBoard, turn = newTurn } then
+                        NoPiecesLeft newTurn
+
+                    else if newPossibleMoves == PossibleMoves.None then
+                        NoPossibleMoves newTurn
+
+                    else
+                        Ongoing
             in
             { board = newBoard
             , turn = newTurn
             , pieceSelected = Nothing
             , possibleMoves = newPossibleMoves
             , excludedCaptures = AnySet.empty Coord.toString
+            , state = newState
             }
                 |> promoteLastRowsToOfficers
 
@@ -449,12 +471,24 @@ makeCapture game capture =
 
                     else
                         Nothing
+
+                newState : State
+                newState =
+                    if currentTurnHasNoPieces { board = newBoard, turn = newTurn } then
+                        NoPiecesLeft newTurn
+
+                    else if newPossibleMoves == PossibleMoves.None then
+                        NoPossibleMoves newTurn
+
+                    else
+                        Ongoing
             in
             { board = newBoard
             , turn = newTurn
             , pieceSelected = newPieceSelected
             , possibleMoves = newPossibleMoves
             , excludedCaptures = newExcludedCaptures
+            , state = newState
             }
                 |> promoteLastRowsToOfficers
 
@@ -506,3 +540,11 @@ promoteLastRowsToOfficers game =
                     game.board
     in
     { game | board = newBoard }
+
+
+currentTurnHasNoPieces : ShortGame -> Bool
+currentTurnHasNoPieces game =
+    game.board
+        |> AnyDict.values
+        |> List.filter (Piece.team >> (==) game.turn)
+        |> (\piecesFiltered -> List.length piecesFiltered == 0)

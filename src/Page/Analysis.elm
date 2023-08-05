@@ -104,15 +104,6 @@ viewContent model =
 viewAnalysisPanel : Model -> Html Msg
 viewAnalysisPanel model =
     let
-        backgroundAndColorClassesBasedOnTurn : Attribute Msg
-        backgroundAndColorClassesBasedOnTurn =
-            case model.game.turn of
-                Team.White ->
-                    Attrs.class "bg-white"
-
-                Team.Black ->
-                    Attrs.class "bg-[#0A0A0A] text-white"
-
         moveDestinations : AnySet String Coord
         moveDestinations =
             case model.game.pieceSelected of
@@ -145,16 +136,78 @@ viewAnalysisPanel model =
             , possibleMoves = model.game.possibleMoves
             }
             model.game.board
-        , Html.div
-            [ Attrs.class "rounded-[4px] shadow-lg text-[20px] p-[10px] select-none"
-            , Attrs.class "w-[150px] text-center"
-            , backgroundAndColorClassesBasedOnTurn
-            ]
-            [ Html.b []
-                [ Html.text <| Team.toString model.game.turn ]
-            , Html.text "'s turn"
-            ]
+        , viewGameState model
         ]
+
+
+viewGameState : Model -> Html Msg
+viewGameState model =
+    let
+        backgroundAndColorClassesBasedOnGameState : Attribute Msg
+        backgroundAndColorClassesBasedOnGameState =
+            case model.game.state of
+                Game.Init ->
+                    case model.game.turn of
+                        Team.White ->
+                            Attrs.class "bg-white"
+
+                        Team.Black ->
+                            Attrs.class "bg-[#0A0A0A] text-white"
+
+                Game.Ongoing ->
+                    case model.game.turn of
+                        Team.White ->
+                            Attrs.class "bg-white"
+
+                        Team.Black ->
+                            Attrs.class "bg-[#0A0A0A] text-white"
+
+                Game.NoPiecesLeft team ->
+                    case Team.opposite team of
+                        Team.White ->
+                            Attrs.class "bg-white"
+
+                        Team.Black ->
+                            Attrs.class "bg-[#0A0A0A] text-white"
+
+                Game.NoPossibleMoves team ->
+                    case Team.opposite team of
+                        Team.White ->
+                            Attrs.class "bg-white"
+
+                        Team.Black ->
+                            Attrs.class "bg-[#0A0A0A] text-white"
+    in
+    Html.div
+        [ Attrs.class "rounded-[4px] shadow-lg text-[20px] p-[10px] select-none"
+        , Attrs.class "w-[150px] text-center"
+        , backgroundAndColorClassesBasedOnGameState
+        ]
+        (case model.game.state of
+            Game.Init ->
+                [ Html.b []
+                    [ Html.text <| Team.toString model.game.turn ]
+                , Html.text "'s turn"
+                ]
+
+            Game.Ongoing ->
+                [ Html.b []
+                    [ Html.text <| Team.toString model.game.turn ]
+                , Html.text "'s turn"
+                ]
+
+            Game.NoPiecesLeft _ ->
+                [ Html.b []
+                    [ Html.text <| Team.toString <| Team.opposite model.game.turn ]
+                , Html.text " wins!"
+                ]
+
+            Game.NoPossibleMoves _ ->
+                [ Html.b []
+                    [ Html.text <| Team.toString <| Team.opposite model.game.turn ]
+                , Html.text " wins!"
+                ]
+        )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
