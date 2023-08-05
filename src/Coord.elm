@@ -8,7 +8,9 @@ module Coord exposing
 
 import Dict.Any as AnyDict exposing (AnyDict)
 import Direction exposing (Direction)
+import Orientation exposing (Orientation)
 import Set.Any as AnySet exposing (AnySet)
+import Team exposing (Team)
 
 
 {-| Position code for the `Piece`s over the `Board`.
@@ -157,83 +159,124 @@ toString coord =
 
 {-| Get CSS _top_ and _left_ values for `Board` elements' view styles.
 -}
-topAndLeftValues : { pieceSize : Int } -> Coord -> { top : Int, left : Int }
-topAndLeftValues { pieceSize } coord =
+topAndLeftValues :
+    { pieceSize : Float, orientation : Orientation }
+    -> Coord
+    -> { top : Float, left : Float }
+topAndLeftValues { pieceSize, orientation } coord =
+    let
+        valuesByOrentation :
+            { top : Float, left : Float }
+            -> { top : Float, left : Float }
+            -> { top : Float, left : Float }
+        valuesByOrentation whitesideValues blackSideValues =
+            case orientation of
+                Orientation.Whiteside ->
+                    whitesideValues
+
+                Orientation.Blackside ->
+                    blackSideValues
+    in
     case coord of
         S1 ->
-            { top = pieceSize * 6, left = 0 }
+            valuesByOrentation { top = pieceSize * 6, left = 0 }
+                { top = 0, left = pieceSize * 6 }
 
         S2 ->
-            { top = pieceSize * 6, left = pieceSize * 2 }
+            valuesByOrentation { top = pieceSize * 6, left = pieceSize * 2 }
+                { top = 0, left = pieceSize * 4 }
 
         S3 ->
-            { top = pieceSize * 6, left = pieceSize * 4 }
+            valuesByOrentation { top = pieceSize * 6, left = pieceSize * 4 }
+                { top = 0, left = pieceSize * 2 }
 
         S4 ->
-            { top = pieceSize * 6, left = pieceSize * 6 }
+            valuesByOrentation { top = pieceSize * 6, left = pieceSize * 6 }
+                { top = 0, left = 0 }
 
         S5 ->
-            { top = pieceSize * 5, left = pieceSize }
+            valuesByOrentation { top = pieceSize * 5, left = pieceSize }
+                { top = pieceSize, left = pieceSize * 5 }
 
         S6 ->
-            { top = pieceSize * 5, left = pieceSize * 3 }
+            valuesByOrentation { top = pieceSize * 5, left = pieceSize * 3 }
+                { top = pieceSize, left = pieceSize * 3 }
 
         S7 ->
-            { top = pieceSize * 5, left = pieceSize * 5 }
+            valuesByOrentation { top = pieceSize * 5, left = pieceSize * 5 }
+                { top = pieceSize, left = pieceSize }
 
         S8 ->
-            { top = pieceSize * 4, left = 0 }
+            valuesByOrentation { top = pieceSize * 4, left = 0 }
+                { top = pieceSize * 2, left = pieceSize * 6 }
 
         S9 ->
-            { top = pieceSize * 4, left = pieceSize * 2 }
+            valuesByOrentation { top = pieceSize * 4, left = pieceSize * 2 }
+                { top = pieceSize * 2, left = pieceSize * 4 }
 
         S10 ->
-            { top = pieceSize * 4, left = pieceSize * 4 }
+            valuesByOrentation { top = pieceSize * 4, left = pieceSize * 4 }
+                { top = pieceSize * 2, left = pieceSize * 2 }
 
         S11 ->
-            { top = pieceSize * 4, left = pieceSize * 6 }
+            valuesByOrentation { top = pieceSize * 4, left = pieceSize * 6 }
+                { top = pieceSize * 2, left = 0 }
 
         S12 ->
-            { top = pieceSize * 3, left = pieceSize }
+            valuesByOrentation { top = pieceSize * 3, left = pieceSize }
+                { top = pieceSize * 3, left = pieceSize * 5 }
 
         S13 ->
-            { top = pieceSize * 3, left = pieceSize * 3 }
+            valuesByOrentation { top = pieceSize * 3, left = pieceSize * 3 }
+                { top = pieceSize * 3, left = pieceSize * 3 }
 
         S14 ->
-            { top = pieceSize * 3, left = pieceSize * 5 }
+            valuesByOrentation { top = pieceSize * 3, left = pieceSize * 5 }
+                { top = pieceSize * 3, left = pieceSize }
 
         S15 ->
-            { top = pieceSize * 2, left = 0 }
+            valuesByOrentation { top = pieceSize * 2, left = 0 }
+                { top = pieceSize * 4, left = pieceSize * 6 }
 
         S16 ->
-            { top = pieceSize * 2, left = pieceSize * 2 }
+            valuesByOrentation { top = pieceSize * 2, left = pieceSize * 2 }
+                { top = pieceSize * 4, left = pieceSize * 4 }
 
         S17 ->
-            { top = pieceSize * 2, left = pieceSize * 4 }
+            valuesByOrentation { top = pieceSize * 2, left = pieceSize * 4 }
+                { top = pieceSize * 4, left = pieceSize * 2 }
 
         S18 ->
-            { top = pieceSize * 2, left = pieceSize * 6 }
+            valuesByOrentation { top = pieceSize * 2, left = pieceSize * 6 }
+                { top = pieceSize * 4, left = 0 }
 
         S19 ->
-            { top = pieceSize, left = pieceSize }
+            valuesByOrentation { top = pieceSize, left = pieceSize }
+                { top = pieceSize * 5, left = pieceSize * 5 }
 
         S20 ->
-            { top = pieceSize, left = pieceSize * 3 }
+            valuesByOrentation { top = pieceSize, left = pieceSize * 3 }
+                { top = pieceSize * 5, left = pieceSize * 3 }
 
         S21 ->
-            { top = pieceSize, left = pieceSize * 5 }
+            valuesByOrentation { top = pieceSize, left = pieceSize * 5 }
+                { top = pieceSize * 5, left = pieceSize }
 
         S22 ->
-            { top = 0, left = 0 }
+            valuesByOrentation { top = 0, left = 0 }
+                { top = pieceSize * 6, left = pieceSize * 6 }
 
         S23 ->
-            { top = 0, left = pieceSize * 2 }
+            valuesByOrentation { top = 0, left = pieceSize * 2 }
+                { top = pieceSize * 6, left = pieceSize * 4 }
 
         S24 ->
-            { top = 0, left = pieceSize * 4 }
+            valuesByOrentation { top = 0, left = pieceSize * 4 }
+                { top = pieceSize * 6, left = pieceSize * 2 }
 
         S25 ->
-            { top = 0, left = pieceSize * 6 }
+            valuesByOrentation { top = 0, left = pieceSize * 6 }
+                { top = pieceSize * 6, left = 0 }
 
 
 {-| Get a reachable square `Cord` by `Direction`. Note that not all squares reach another

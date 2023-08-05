@@ -111,7 +111,7 @@ view model =
                             Page.Rules.view rulesModel
                     in
                     { title = title
-                    , body = List.map (Html.map HomeMsg) body
+                    , body = List.map (Html.map RulesMsg) body
                     }
 
                 Analysis analysisModel ->
@@ -150,6 +150,18 @@ update msg model =
 
                 Browser.External url ->
                     ( model, Nav.load url )
+
+        ( HomeMsg homeMsg, Home homeModel ) ->
+            Page.Home.update homeMsg homeModel
+                |> Tuple.mapBoth Home (Cmd.map HomeMsg)
+
+        ( RulesMsg rulesMsg, Rules rulesModel ) ->
+            Page.Rules.update rulesMsg rulesModel
+                |> Tuple.mapBoth Rules (Cmd.map RulesMsg)
+
+        ( AnalysisMsg analysisMsg, Analysis analysisModel ) ->
+            Page.Analysis.update analysisMsg analysisModel
+                |> Tuple.mapBoth Analysis (Cmd.map AnalysisMsg)
 
         _ ->
             ( model, Cmd.none )

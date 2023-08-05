@@ -1,4 +1,4 @@
-module Capture exposing (Capture, toString)
+module Capture exposing (Capture, soundFilename, toString)
 
 import Coord exposing (Coord)
 
@@ -26,3 +26,8 @@ toString : Capture -> String
 toString { origin, capturee, destination } =
     List.map (Coord.toString >> String.dropLeft 1) [ origin, capturee, destination ]
         |> String.join "-"
+
+
+soundFilename : String
+soundFilename =
+    "capture.mp3"

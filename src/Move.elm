@@ -1,4 +1,4 @@
-module Move exposing (Move, toString)
+module Move exposing (Move, soundFilename, toString)
 
 import Coord exposing (Coord)
 
@@ -25,3 +25,8 @@ toString : Move -> String
 toString { origin, destination } =
     List.map (Coord.toString >> String.dropLeft 1) [ origin, destination ]
         |> String.join "-"
+
+
+soundFilename : String
+soundFilename =
+    "move.mp3"

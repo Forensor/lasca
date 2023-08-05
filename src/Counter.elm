@@ -108,7 +108,7 @@ Default height/width is _70px_, thus it's always best to use `counterSize`s that
 divisible by `70`.
 
 -}
-view : { positionOnStack : Int, counterSize : Int } -> Counter -> Html msg
+view : { positionOnStack : Int, counterSize : Float } -> Counter -> Html msg
 view { positionOnStack, counterSize } counter =
     let
         -- Hex colors based on `Team`/`Role` combo
@@ -118,22 +118,22 @@ view { positionOnStack, counterSize } counter =
         {- Height of the edge of a `Counter`, to beautifully stack one on top of each
            other
         -}
-        counterEdgeHeight : Int
+        counterEdgeHeight : Float
         counterEdgeHeight =
-            counterSize // 7
+            counterSize / 7
 
         -- How much px we apply to bottom CSS property
-        marginByPosition : Int
+        marginByPosition : Float
         marginByPosition =
-            positionOnStack * counterEdgeHeight
+            toFloat positionOnStack * counterEdgeHeight
     in
     Svg.svg
-        [ SvgAttrs.width <| String.fromInt counterSize
-        , SvgAttrs.height <| String.fromInt counterSize
+        [ SvgAttrs.width <| String.fromFloat counterSize
+        , SvgAttrs.height <| String.fromFloat counterSize
         , SvgAttrs.viewBox "0 0 70 70"
         , SvgAttrs.style <|
             String.join " "
-                [ "bottom: " ++ String.fromInt marginByPosition ++ "px;"
+                [ "bottom: " ++ String.fromFloat marginByPosition ++ "px;"
                 , "z-index: " ++ String.fromInt positionOnStack ++ ";"
                 ]
         , SvgAttrs.class "counter absolute"

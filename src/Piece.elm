@@ -1,12 +1,22 @@
-module Piece exposing (Msg, Piece, defaultSize, role, team, view)
+module Piece exposing
+    ( Piece
+    , className
+    , convertToOfficerByTeam
+    , defaultSize
+    , role
+    , selectedClassName
+    , team
+    , view
+    )
 
 import Coord exposing (Coord)
 import Counter exposing (Counter)
-import Html exposing (Html)
+import Html exposing (Attribute, Html)
 import Html.Attributes as Attrs
 import Html.Events as Events
 import Json.Decode as Decode
 import List.NonEmpty as NonEmpty exposing (NonEmpty)
+import Orientation exposing (Orientation)
 import Role exposing (Role)
 import Svg.Attributes as SvgAttrs
 import Team exposing (Team)
@@ -22,14 +32,17 @@ type alias Piece =
     NonEmpty Counter
 
 
-type Msg
-    = DragPiece Coord
-    | DropPiece Coord
+type alias Config msg =
+    { clickPieceToMsg : Coord -> msg
+    , pieceSize : Float
+    , orientation : Orientation
+    , selected : Bool
+    }
 
 
-defaultSize : Int
+defaultSize : Float
 defaultSize =
-    70
+    105
 
 
 team : Piece -> Team
@@ -42,35 +55,69 @@ role ( topmostCounter, _ ) =
     topmostCounter.role
 
 
+selectedClassName : String
+selectedClassName =
+    "piece-selected"
+
+
+className : String
+className =
+    "piece"
+
+
+convertToOfficerByTeam : Team -> Piece -> Piece
+convertToOfficerByTeam desiredTeam ( topmostCounter, rest ) =
+    if topmostCounter.team == desiredTeam then
+        ( { team = topmostCounter.team, role = Role.Officer }, rest )
+
+    else
+        ( topmostCounter, rest )
+
+
 {-| Render a `Piece` on a specific `Coord`.
 
 Configuration allows you to set custom `pieceSize`, which affects the size of the whole
 `Board`.
 
 -}
-view : { pieceSize : Int } -> Coord -> Piece -> Html Msg
-view { pieceSize } coord piece =
+view : Config msg -> Coord -> Piece -> Html msg
+view config coord piece =
     let
         { top, left } =
-            Coord.topAndLeftValues { pieceSize = pieceSize } coord
+            Coord.topAndLeftValues
+                { pieceSize = config.pieceSize
+                , orientation = config.orientation
+                }
+                coord
+
+        selectedClassNameIfSelected : List (Attribute msg)
+        selectedClassNameIfSelected =
+            if config.selected then
+                [ Attrs.class selectedClassName ]
+
+            else
+                []
     in
     Html.node "piece"
-        [ Attrs.class "piece block absolute cursor-pointer"
+        (selectedClassNameIfSelected
+            ++ [ Attrs.class className
+               , Attrs.class <| Team.className <| team piece
+               , Attrs.class "block absolute"
 
-        {- For some reason `Html.Attributes.style` doesn't work with this, neither does
-           tailwindcss, so this is a workaround...
-        -}
-        , SvgAttrs.style <|
-            String.join " "
-                [ "top: " ++ String.fromInt top ++ "px;"
-                , "left: " ++ String.fromInt left ++ "px;"
-                , "height: " ++ String.fromInt pieceSize ++ "px;"
-                , "width: " ++ String.fromInt pieceSize ++ "px;"
-                ]
-        , Attrs.class <| Coord.toString coord
-        , Events.onMouseDown <| DragPiece coord
-        , Events.onMouseUp <| DropPiece coord
-        ]
+               {- For some reason `Html.Attributes.style` doesn't work with this, neither
+                  does tailwindcss, so this is a workaround...
+               -}
+               , SvgAttrs.style <|
+                    String.join " "
+                        [ "top: " ++ String.fromFloat top ++ "px;"
+                        , "left: " ++ String.fromFloat left ++ "px;"
+                        , "height: " ++ String.fromFloat config.pieceSize ++ "px;"
+                        , "width: " ++ String.fromFloat config.pieceSize ++ "px;"
+                        ]
+               , Attrs.class <| Coord.toString coord
+               , Events.onClick <| config.clickPieceToMsg coord
+               ]
+        )
         (piece
             |> NonEmpty.indexedMap
                 (\index counter ->
@@ -84,7 +131,7 @@ view { pieceSize } coord piece =
                     in
                     Counter.view
                         { positionOnStack = positionOnStack
-                        , counterSize = pieceSize
+                        , counterSize = config.pieceSize
                         }
                         counter
                 )

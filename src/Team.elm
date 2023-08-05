@@ -1,4 +1,10 @@
-module Team exposing (Team(..), defaultTeam, toString)
+module Team exposing
+    ( Team(..)
+    , className
+    , defaultTeam
+    , opposite
+    , toString
+    )
 
 {-| The two sides of the match.
 
@@ -25,3 +31,19 @@ toString team =
 
         Black ->
             "Black"
+
+
+className : Team -> String
+className team =
+    toString team
+        |> String.toLower
+
+
+opposite : Team -> Team
+opposite team =
+    case team of
+        White ->
+            Black
+
+        Black ->
+            White
