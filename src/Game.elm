@@ -1,14 +1,11 @@
 module Game exposing
     ( Game
-    , State(..)
     , defaultGame
     , getAllPossibleCaptures
     , getAllPossibleMoves
-    , getMoveDestinationCoordsByCoord
     , getMovesByCoord
     , makeCapture
     , makeMove
-    , promoteLastRowsToOfficers
     )
 
 import Board exposing (Board)
@@ -17,7 +14,6 @@ import Coord exposing (Coord)
 import Counter exposing (Counter)
 import Dict.Any as AnyDict
 import Direction exposing (Direction)
-import Html exposing (Html)
 import List.NonEmpty as NonEmpty
 import Move exposing (Move)
 import Piece exposing (Piece)
@@ -29,31 +25,15 @@ import Team exposing (Team)
 type alias Game =
     { board : Board
     , turn : Team
-    , pieceSelected : Maybe Coord
     , possibleMoves : PossibleMoves
     , excludedCaptures : AnySet String Coord
-    , state : State
     }
-
-
-type alias ShortGame =
-    { board : Board
-    , turn : Team
-    }
-
-
-type State
-    = Init
-    | Ongoing
-    | NoPiecesLeft Team
-    | NoPossibleMoves Team
 
 
 defaultGame : Game
 defaultGame =
-    { board = Board.defaultBoard
-    , turn = Team.defaultTeam
-    , pieceSelected = Nothing
+    { board = Board.default
+    , turn = Team.default
     , possibleMoves =
         PossibleMoves.Moves
             (AnySet.fromList Move.toString
@@ -66,7 +46,6 @@ defaultGame =
                 ]
             )
     , excludedCaptures = AnySet.empty Coord.toString
-    , state = Init
     }
 
 
@@ -82,12 +61,11 @@ For a `Capture` to be possible, these conditions need to be met:
 
 -}
 getMaybeCaptureByCoordAndDirection :
-    ShortGame
-    -> AnySet String Coord
+    Game
     -> Coord
     -> Direction
     -> Maybe Capture
-getMaybeCaptureByCoordAndDirection game excludedCaptureeCoords coord direction =
+getMaybeCaptureByCoordAndDirection game coord direction =
     let
         maybeCaptureeCoord : Maybe Coord
         maybeCaptureeCoord =
@@ -104,7 +82,7 @@ getMaybeCaptureByCoordAndDirection game excludedCaptureeCoords coord direction =
         maybeOriginTopmostCounter : Maybe Counter
         maybeOriginTopmostCounter =
             AnyDict.get coord game.board
-                |> Maybe.map NonEmpty.head
+                |> Maybe.map Piece.getTopmostCounter
 
         originPieceBelongsToCurrentTurn : Bool
         originPieceBelongsToCurrentTurn =
@@ -146,7 +124,7 @@ getMaybeCaptureByCoordAndDirection game excludedCaptureeCoords coord direction =
             maybeCaptureeCoord
                 |> Maybe.map
                     (\captureeCoord ->
-                        AnySet.member captureeCoord excludedCaptureeCoords
+                        AnySet.member captureeCoord game.excludedCaptures
                             |> not
                     )
                 |> Maybe.withDefault False
@@ -178,22 +156,22 @@ getMaybeCaptureByCoordAndDirection game excludedCaptureeCoords coord direction =
 
 {-| Get all `Capture`s for every possible `Direction` on the desired `Coord`.
 -}
-getCapturesByCoord : ShortGame -> AnySet String Coord -> Coord -> AnySet String Capture
-getCapturesByCoord game excludedCaptureeCoords coord =
+getCapturesByCoord : Game -> Coord -> AnySet String Capture
+getCapturesByCoord game coord =
     AnySet.filterMap Capture.toString
-        (getMaybeCaptureByCoordAndDirection game excludedCaptureeCoords coord)
+        (getMaybeCaptureByCoordAndDirection game coord)
         Direction.allDirections
 
 
 {-| Get all the possible `Capture`s for the current turn.
 -}
-getAllPossibleCaptures : ShortGame -> AnySet String Capture
+getAllPossibleCaptures : Game -> AnySet String Capture
 getAllPossibleCaptures game =
     Coord.allCoords
         |> AnySet.toList
         |> List.concatMap
             (\coord ->
-                getCapturesByCoord game (AnySet.empty Coord.toString) coord
+                getCapturesByCoord game coord
                     |> AnySet.toList
             )
         |> AnySet.fromList Capture.toString
@@ -209,7 +187,7 @@ For a `Move` to be possible, these conditions need to be met:
 
 -}
 getMaybeMoveByCoordAndDirection :
-    ShortGame
+    Game
     -> Coord
     -> Direction
     -> Maybe Move
@@ -222,7 +200,7 @@ getMaybeMoveByCoordAndDirection game coord direction =
         maybeOriginTopmostCounter : Maybe Counter
         maybeOriginTopmostCounter =
             AnyDict.get coord game.board
-                |> Maybe.map NonEmpty.head
+                |> Maybe.map Piece.getTopmostCounter
 
         originPieceBelongsToCurrentTurn : Bool
         originPieceBelongsToCurrentTurn =
@@ -272,7 +250,7 @@ getMaybeMoveByCoordAndDirection game coord direction =
 
 {-| Get all `Move`s for every possible `Direction` on the desired `Coord`.
 -}
-getMovesByCoord : ShortGame -> Coord -> AnySet String Move
+getMovesByCoord : Game -> Coord -> AnySet String Move
 getMovesByCoord game coord =
     AnySet.filterMap Move.toString
         (getMaybeMoveByCoordAndDirection game coord)
@@ -281,7 +259,7 @@ getMovesByCoord game coord =
 
 {-| Get all the possible `Move`s for the current turn.
 -}
-getAllPossibleMoves : ShortGame -> AnySet String Move
+getAllPossibleMoves : Game -> AnySet String Move
 getAllPossibleMoves game =
     Coord.allCoords
         |> AnySet.toList
@@ -291,21 +269,6 @@ getAllPossibleMoves game =
                     |> AnySet.toList
             )
         |> AnySet.fromList Move.toString
-
-
-getMoveDestinationCoordsByCoord : Game -> Coord -> AnySet String Coord
-getMoveDestinationCoordsByCoord game coord =
-    case game.possibleMoves of
-        PossibleMoves.Captures captures ->
-            AnySet.filter (.origin >> (==) coord) captures
-                |> AnySet.map Coord.toString .destination
-
-        PossibleMoves.Moves moves ->
-            AnySet.filter (.origin >> (==) coord) moves
-                |> AnySet.map Coord.toString .destination
-
-        PossibleMoves.None ->
-            AnySet.empty Coord.toString
 
 
 makeMove : Game -> Move -> Game
@@ -333,11 +296,11 @@ makeMove game move =
                     let
                         possibleCaptures : AnySet String Capture
                         possibleCaptures =
-                            getAllPossibleCaptures { board = newBoard, turn = newTurn }
+                            getAllPossibleCaptures game
 
                         possibleMoves : AnySet String Move
                         possibleMoves =
-                            getAllPossibleMoves { board = newBoard, turn = newTurn }
+                            getAllPossibleMoves game
                     in
                     if AnySet.size possibleCaptures > 0 then
                         PossibleMoves.Captures possibleCaptures
@@ -347,24 +310,11 @@ makeMove game move =
 
                     else
                         PossibleMoves.None
-
-                newState : State
-                newState =
-                    if currentTurnHasNoPieces { board = newBoard, turn = newTurn } then
-                        NoPiecesLeft newTurn
-
-                    else if newPossibleMoves == PossibleMoves.None then
-                        NoPossibleMoves newTurn
-
-                    else
-                        Ongoing
             in
             { board = newBoard
             , turn = newTurn
-            , pieceSelected = Nothing
             , possibleMoves = newPossibleMoves
             , excludedCaptures = AnySet.empty Coord.toString
-            , state = newState
             }
                 |> promoteLastRowsToOfficers
 
@@ -414,14 +364,14 @@ makeCapture game capture =
 
                 possibleFurtherCaptures : AnySet String Capture
                 possibleFurtherCaptures =
-                    let
-                        excludedCaptures : AnySet String Coord
-                        excludedCaptures =
-                            game.excludedCaptures
-                                |> AnySet.insert capture.capturee
-                    in
-                    getCapturesByCoord { board = newBoard, turn = game.turn }
-                        excludedCaptures
+                    getCapturesByCoord
+                        { game
+                            | board = newBoard
+                            , turn = game.turn
+                            , excludedCaptures =
+                                game.excludedCaptures
+                                    |> AnySet.insert capture.capturee
+                        }
                         capture.destination
 
                 newExcludedCaptures : AnySet String Coord
@@ -446,11 +396,19 @@ makeCapture game capture =
                     let
                         possibleCaptures : AnySet String Capture
                         possibleCaptures =
-                            getAllPossibleCaptures { board = newBoard, turn = newTurn }
+                            getAllPossibleCaptures
+                                { game
+                                    | board = newBoard
+                                    , turn = newTurn
+                                }
 
                         possibleMoves : AnySet String Move
                         possibleMoves =
-                            getAllPossibleMoves { board = newBoard, turn = newTurn }
+                            getAllPossibleMoves
+                                { game
+                                    | board = newBoard
+                                    , turn = newTurn
+                                }
                     in
                     if AnySet.size possibleFurtherCaptures > 0 then
                         PossibleMoves.Captures possibleFurtherCaptures
@@ -463,32 +421,11 @@ makeCapture game capture =
 
                     else
                         PossibleMoves.None
-
-                newPieceSelected : Maybe Coord
-                newPieceSelected =
-                    if AnySet.size possibleFurtherCaptures > 0 then
-                        Just capture.destination
-
-                    else
-                        Nothing
-
-                newState : State
-                newState =
-                    if currentTurnHasNoPieces { board = newBoard, turn = newTurn } then
-                        NoPiecesLeft newTurn
-
-                    else if newPossibleMoves == PossibleMoves.None then
-                        NoPossibleMoves newTurn
-
-                    else
-                        Ongoing
             in
             { board = newBoard
             , turn = newTurn
-            , pieceSelected = newPieceSelected
             , possibleMoves = newPossibleMoves
             , excludedCaptures = newExcludedCaptures
-            , state = newState
             }
                 |> promoteLastRowsToOfficers
 
@@ -542,7 +479,7 @@ promoteLastRowsToOfficers game =
     { game | board = newBoard }
 
 
-currentTurnHasNoPieces : ShortGame -> Bool
+currentTurnHasNoPieces : Game -> Bool
 currentTurnHasNoPieces game =
     game.board
         |> AnyDict.values

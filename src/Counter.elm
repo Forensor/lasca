@@ -64,6 +64,32 @@ directions =
         ]
 
 
+toString : Counter -> String
+toString { team, role } =
+    case ( team, role ) of
+        ( Team.White, Role.Soldier ) ->
+            "w"
+
+        ( Team.Black, Role.Soldier ) ->
+            "b"
+
+        ( Team.White, Role.Officer ) ->
+            "W"
+
+        ( Team.Black, Role.Officer ) ->
+            "B"
+
+
+
+-- All view related stuff is beyond here
+
+
+type alias Config =
+    { positionOnStack : Int
+    , counterSize : Float
+    }
+
+
 {-| Get _svg_'s _stroke_ and _fill_ values for `Piece` view styles.
 -}
 hexColors : Counter -> { stroke : String, fill : String }
@@ -82,22 +108,6 @@ hexColors { team, role } =
             { stroke = "#822121", fill = "#CD3C3C" }
 
 
-toString : Counter -> String
-toString { team, role } =
-    case ( team, role ) of
-        ( Team.White, Role.Soldier ) ->
-            "w"
-
-        ( Team.Black, Role.Soldier ) ->
-            "b"
-
-        ( Team.White, Role.Officer ) ->
-            "W"
-
-        ( Team.Black, Role.Officer ) ->
-            "B"
-
-
 {-| Render a single `Counter`.
 
 _Stroke_ and _fill_ colors for the _svg_ are based on the `Team`/`Role` combo. _Bottom_
@@ -108,8 +118,8 @@ Default height/width is _70px_, thus it's always best to use `counterSize`s that
 divisible by `70`.
 
 -}
-view : { positionOnStack : Int, counterSize : Float } -> Counter -> Html msg
-view { positionOnStack, counterSize } counter =
+view : Config -> Counter -> Html msg
+view config counter =
     let
         -- Hex colors based on `Team`/`Role` combo
         { stroke, fill } =
@@ -120,21 +130,21 @@ view { positionOnStack, counterSize } counter =
         -}
         counterEdgeHeight : Float
         counterEdgeHeight =
-            counterSize / 7
+            config.counterSize / 7
 
         -- How much px we apply to bottom CSS property
         marginByPosition : Float
         marginByPosition =
-            toFloat positionOnStack * counterEdgeHeight
+            toFloat config.positionOnStack * counterEdgeHeight
     in
     Svg.svg
-        [ SvgAttrs.width <| String.fromFloat counterSize
-        , SvgAttrs.height <| String.fromFloat counterSize
+        [ SvgAttrs.width <| String.fromFloat config.counterSize
+        , SvgAttrs.height <| String.fromFloat config.counterSize
         , SvgAttrs.viewBox "0 0 70 70"
         , SvgAttrs.style <|
             String.join " "
                 [ "bottom: " ++ String.fromFloat marginByPosition ++ "px;"
-                , "z-index: " ++ String.fromInt positionOnStack ++ ";"
+                , "z-index: " ++ String.fromInt config.positionOnStack ++ ";"
                 ]
         , SvgAttrs.class "counter absolute"
         ]
