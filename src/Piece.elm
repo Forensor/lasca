@@ -16,9 +16,8 @@ module Piece exposing
 
 import Coord exposing (Coord)
 import Counter exposing (Counter)
-import Html exposing (Attribute, Html)
+import Html exposing (Html)
 import Html.Attributes as Attrs
-import Html.Events as Events
 import List.NonEmpty as NonEmpty exposing (NonEmpty)
 import Orientation exposing (Orientation)
 import Role exposing (Role)

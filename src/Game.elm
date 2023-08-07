@@ -1,21 +1,22 @@
 module Game exposing
     ( Game
     , defaultGame
-    , getAllPossibleCaptures
+    , getAllPossibleCaptureSteps
     , getAllPossibleMoves
     , getMovesByCoord
-    , makeCapture
-    , makeMove
+    , makeMovement
     )
 
 import Board exposing (Board)
 import Capture exposing (Capture)
+import CaptureStep exposing (CaptureStep)
 import Coord exposing (Coord)
 import Counter exposing (Counter)
 import Dict.Any as AnyDict
 import Direction exposing (Direction)
 import List.NonEmpty as NonEmpty
 import Move exposing (Move)
+import Movement exposing (Movement)
 import Piece exposing (Piece)
 import PossibleMoves exposing (PossibleMoves)
 import Set.Any as AnySet exposing (AnySet)
@@ -60,12 +61,12 @@ For a `Capture` to be possible, these conditions need to be met:
   - Capturee `Coord` must not be excluded (i.e. it mustn't have been captured before)
 
 -}
-getMaybeCaptureByCoordAndDirection :
+getMaybeCaptureStepByCoordAndDirection :
     Game
     -> Coord
     -> Direction
-    -> Maybe Capture
-getMaybeCaptureByCoordAndDirection game coord direction =
+    -> Maybe CaptureStep
+getMaybeCaptureStepByCoordAndDirection game coord direction =
     let
         maybeCaptureeCoord : Maybe Coord
         maybeCaptureeCoord =
@@ -129,8 +130,8 @@ getMaybeCaptureByCoordAndDirection game coord direction =
                     )
                 |> Maybe.withDefault False
 
-        allCaptureConditionsAreMet : Bool
-        allCaptureConditionsAreMet =
+        allCaptureStepConditionsAreMet : Bool
+        allCaptureStepConditionsAreMet =
             List.all ((==) True)
                 [ originPieceBelongsToCurrentTurn
                 , originPieceCanMoveToDesiredDirection
@@ -139,7 +140,7 @@ getMaybeCaptureByCoordAndDirection game coord direction =
                 , captureeCoordIsNotExcluded
                 ]
     in
-    if allCaptureConditionsAreMet then
+    if allCaptureStepConditionsAreMet then
         Maybe.map2
             (\captureeCord destinationCoord ->
                 { origin = coord
@@ -156,25 +157,25 @@ getMaybeCaptureByCoordAndDirection game coord direction =
 
 {-| Get all `Capture`s for every possible `Direction` on the desired `Coord`.
 -}
-getCapturesByCoord : Game -> Coord -> AnySet String Capture
-getCapturesByCoord game coord =
-    AnySet.filterMap Capture.toString
-        (getMaybeCaptureByCoordAndDirection game coord)
+getCaptureStepsByCoord : Game -> Coord -> AnySet String CaptureStep
+getCaptureStepsByCoord game coord =
+    AnySet.filterMap CaptureStep.toString
+        (getMaybeCaptureStepByCoordAndDirection game coord)
         Direction.allDirections
 
 
 {-| Get all the possible `Capture`s for the current turn.
 -}
-getAllPossibleCaptures : Game -> AnySet String Capture
-getAllPossibleCaptures game =
+getAllPossibleCaptureSteps : Game -> AnySet String CaptureStep
+getAllPossibleCaptureSteps game =
     Coord.allCoords
         |> AnySet.toList
         |> List.concatMap
             (\coord ->
-                getCapturesByCoord game coord
+                getCaptureStepsByCoord game coord
                     |> AnySet.toList
             )
-        |> AnySet.fromList Capture.toString
+        |> AnySet.fromList CaptureStep.toString
 
 
 {-| Returns a `Move` if possible, given the desired `Coord` and `Direction`.
@@ -294,16 +295,16 @@ makeMove game move =
                 newPossibleMoves : PossibleMoves
                 newPossibleMoves =
                     let
-                        possibleCaptures : AnySet String Capture
-                        possibleCaptures =
-                            getAllPossibleCaptures game
+                        possibleCaptureSteps : AnySet String CaptureStep
+                        possibleCaptureSteps =
+                            getAllPossibleCaptureSteps game
 
                         possibleMoves : AnySet String Move
                         possibleMoves =
                             getAllPossibleMoves game
                     in
-                    if AnySet.size possibleCaptures > 0 then
-                        PossibleMoves.Captures possibleCaptures
+                    if AnySet.size possibleCaptureSteps > 0 then
+                        PossibleMoves.Captures possibleCaptureSteps
 
                     else if AnySet.size possibleMoves > 0 then
                         PossibleMoves.Moves possibleMoves
@@ -322,8 +323,8 @@ makeMove game move =
             game
 
 
-makeCapture : Game -> Capture -> Game
-makeCapture game capture =
+makeCaptureStep : Game -> CaptureStep -> Game
+makeCaptureStep game capture =
     let
         maybeOriginPiece : Maybe Piece
         maybeOriginPiece =
@@ -362,9 +363,9 @@ makeCapture game capture =
                         |> insertOrRemoveNewCapturedPiece
                         |> AnyDict.insert capture.destination destinationPiece
 
-                possibleFurtherCaptures : AnySet String Capture
-                possibleFurtherCaptures =
-                    getCapturesByCoord
+                possibleFurtherCaptureSteps : AnySet String CaptureStep
+                possibleFurtherCaptureSteps =
+                    getCaptureStepsByCoord
                         { game
                             | board = newBoard
                             , turn = game.turn
@@ -376,7 +377,7 @@ makeCapture game capture =
 
                 newExcludedCaptures : AnySet String Coord
                 newExcludedCaptures =
-                    if AnySet.size possibleFurtherCaptures > 0 then
+                    if AnySet.size possibleFurtherCaptureSteps > 0 then
                         game.excludedCaptures
                             |> AnySet.insert capture.capturee
 
@@ -385,7 +386,7 @@ makeCapture game capture =
 
                 newTurn : Team
                 newTurn =
-                    if AnySet.size possibleFurtherCaptures > 0 then
+                    if AnySet.size possibleFurtherCaptureSteps > 0 then
                         game.turn
 
                     else
@@ -394,9 +395,9 @@ makeCapture game capture =
                 newPossibleMoves : PossibleMoves
                 newPossibleMoves =
                     let
-                        possibleCaptures : AnySet String Capture
-                        possibleCaptures =
-                            getAllPossibleCaptures
+                        possibleCaptureSteps : AnySet String CaptureStep
+                        possibleCaptureSteps =
+                            getAllPossibleCaptureSteps
                                 { game
                                     | board = newBoard
                                     , turn = newTurn
@@ -410,11 +411,11 @@ makeCapture game capture =
                                     , turn = newTurn
                                 }
                     in
-                    if AnySet.size possibleFurtherCaptures > 0 then
-                        PossibleMoves.Captures possibleFurtherCaptures
+                    if AnySet.size possibleFurtherCaptureSteps > 0 then
+                        PossibleMoves.Captures possibleFurtherCaptureSteps
 
-                    else if AnySet.size possibleCaptures > 0 then
-                        PossibleMoves.Captures possibleCaptures
+                    else if AnySet.size possibleCaptureSteps > 0 then
+                        PossibleMoves.Captures possibleCaptureSteps
 
                     else if AnySet.size possibleMoves > 0 then
                         PossibleMoves.Moves possibleMoves
@@ -431,6 +432,26 @@ makeCapture game capture =
 
         _ ->
             game
+
+
+makeCapture : Game -> Capture -> Game
+makeCapture game capture =
+    NonEmpty.foldl
+        (\captureStep game_ ->
+            makeCaptureStep game_ captureStep
+        )
+        game
+        capture
+
+
+makeMovement : Game -> Movement -> Game
+makeMovement game movement =
+    case movement of
+        Movement.Capture capture ->
+            makeCapture game capture
+
+        Movement.Move move ->
+            makeMove game move
 
 
 promoteLastRowsToOfficers : Game -> Game

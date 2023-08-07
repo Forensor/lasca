@@ -1,7 +1,8 @@
 module PossibleMoves exposing (..)
 
 import Capture exposing (Capture)
-import Coord exposing (Coord)
+import CaptureStep exposing (CaptureStep)
+import Coord
 import Move exposing (Move)
 import Set.Any as AnySet exposing (AnySet)
 
@@ -12,7 +13,7 @@ Either a you are able to make `Moves` or `Captures`, but not both at the same ti
 
 -}
 type PossibleMoves
-    = Captures (AnySet String Capture)
+    = Captures (AnySet String CaptureStep)
     | Moves (AnySet String Move)
     | None
 

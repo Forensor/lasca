@@ -1,13 +1,14 @@
-module Capture exposing (Capture, soundFilename, toString)
+module Capture exposing (Capture, toString)
 
+import CaptureStep exposing (CaptureStep)
 import Coord exposing (Coord)
+import List.NonEmpty exposing (NonEmpty)
 
 
+{-| A `Capture` holds the whole record of `CaptureStep`s a capturing action can make.
+-}
 type alias Capture =
-    { origin : Coord
-    , capturee : Coord
-    , destination : Coord
-    }
+    NonEmpty CaptureStep
 
 
 {-| Converts a `Capture` to a
@@ -23,11 +24,14 @@ toString { origin = Coord.S1, capturee = Coord.S5, destination = Coord.S9 }
 
 -}
 toString : Capture -> String
-toString { origin, capturee, destination } =
-    List.map (Coord.toString >> String.dropLeft 1) [ origin, capturee, destination ]
-        |> String.join "-"
-
-
-soundFilename : String
-soundFilename =
-    "capture.mp3"
+toString ( firstCaptureStep, rest ) =
+    CaptureStep.toString firstCaptureStep
+        ++ (List.map
+                (CaptureStep.toString
+                    >> String.split "-"
+                    >> List.drop 1
+                    >> String.join "-"
+                )
+                rest
+                |> String.join "-"
+           )
