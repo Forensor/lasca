@@ -5,6 +5,10 @@ import Browser exposing (Document, UrlRequest(..))
 import Browser.Navigation as Nav
 import Html
 import Orientation exposing (Orientation)
+import Page.Analysis
+import Page.Game
+import Page.Home
+import Page.Rules
 import Piece exposing (Piece)
 import Route exposing (Route)
 import Session exposing (Session)
@@ -14,10 +18,18 @@ import Url exposing (Url)
 type Msg
     = UrlChange Url
     | UrlRequest UrlRequest
+    | HomeMsg Page.Home.Msg
+    | GameMsg Page.Game.Msg
+    | RulesMsg Page.Rules.Msg
+    | AnalysisMsg Page.Analysis.Msg
 
 
 type Model
-    = Redirect Session
+    = Home Page.Home.Model
+    | Game Page.Game.Model
+    | Rules Page.Rules.Model
+    | Analysis Page.Analysis.Model
+    | Redirect Session
 
 
 init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -28,6 +40,18 @@ init flags url navKey =
 modelToSession : Model -> Session
 modelToSession model =
     case model of
+        Home { session } ->
+            session
+
+        Game { session } ->
+            session
+
+        Rules { session } ->
+            session
+
+        Analysis { session } ->
+            session
+
         Redirect session ->
             session
 
@@ -44,16 +68,20 @@ changeRoute maybeRoute model =
             ( model, Cmd.none )
 
         Just Route.Home ->
-            ( model, Cmd.none )
+            Page.Home.init session
+                |> Tuple.mapBoth Home (Cmd.map HomeMsg)
 
         Just (Route.Game _) ->
-            ( model, Cmd.none )
+            Page.Game.init session
+                |> Tuple.mapBoth Game (Cmd.map GameMsg)
 
         Just Route.Rules ->
-            ( model, Cmd.none )
+            Page.Rules.init session
+                |> Tuple.mapBoth Rules (Cmd.map RulesMsg)
 
         Just Route.Analysis ->
-            ( model, Cmd.none )
+            Page.Analysis.init session
+                |> Tuple.mapBoth Analysis (Cmd.map AnalysisMsg)
 
 
 view : Model -> Document Msg
@@ -62,10 +90,45 @@ view model =
         viewPage : Document Msg
         viewPage =
             case model of
+                Home homeModel ->
+                    let
+                        { title, body } =
+                            Page.Home.view homeModel
+                    in
+                    { title = title
+                    , body = List.map (Html.map HomeMsg) body
+                    }
+
+                Game gameModel ->
+                    let
+                        { title, body } =
+                            Page.Game.view gameModel
+                    in
+                    { title = title
+                    , body = List.map (Html.map GameMsg) body
+                    }
+
+                Rules rulesModel ->
+                    let
+                        { title, body } =
+                            Page.Rules.view rulesModel
+                    in
+                    { title = title
+                    , body = List.map (Html.map RulesMsg) body
+                    }
+
+                Analysis analysisModel ->
+                    let
+                        { title, body } =
+                            Page.Analysis.view analysisModel
+                    in
+                    { title = title
+                    , body = List.map (Html.map AnalysisMsg) body
+                    }
+
                 Redirect _ ->
                     { title = "lasca - Redirecting..."
-                    , body =
-                        []
+                    , body = []
                     }
     in
     viewPage
@@ -90,6 +153,21 @@ update msg model =
 
                 Browser.External url ->
                     ( model, Nav.load url )
+
+        ( HomeMsg homeMsg, Home homeModel ) ->
+            Page.Home.update homeMsg homeModel
+                |> Tuple.mapBoth Home (Cmd.map HomeMsg)
+
+        ( RulesMsg rulesMsg, Rules rulesModel ) ->
+            Page.Rules.update rulesMsg rulesModel
+                |> Tuple.mapBoth Rules (Cmd.map RulesMsg)
+
+        ( AnalysisMsg analysisMsg, Analysis analysisModel ) ->
+            Page.Analysis.update analysisMsg analysisModel
+                |> Tuple.mapBoth Analysis (Cmd.map AnalysisMsg)
+
+        _ ->
+            ( model, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
