@@ -22,14 +22,14 @@ Any `Coord` not present in the dictionary means that the square is empty.
 
 -}
 type alias Board =
-    AnyDict String Coord Piece
+    AnyDict Int Coord Piece
 
 
 {-| Default starting position `Board`.
 -}
 default : Board
 default =
-    AnyDict.fromList Coord.toString
+    AnyDict.fromList Coord.toInt
         [ ( Coord.S1, ( { team = Team.White, role = Role.Soldier }, [] ) )
         , ( Coord.S2, ( { team = Team.White, role = Role.Soldier }, [] ) )
         , ( Coord.S3, ( { team = Team.White, role = Role.Soldier }, [] ) )

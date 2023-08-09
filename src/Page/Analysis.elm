@@ -39,7 +39,7 @@ type Msg
 init : Session -> ( Model, Cmd Msg )
 init session =
     ( { session = session
-      , game = Game.defaultGame
+      , game = Game.default
       , preferencesPanelIsOpened = False
       }
     , Cmd.none

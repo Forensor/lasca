@@ -2,6 +2,7 @@ module Coord exposing
     ( Coord(..)
     , adjacentByDirection
     , allCoords
+    , toInt
     , toString
     , topAndLeftValues
     )
@@ -47,9 +48,9 @@ type Coord
     | S25
 
 
-allCoords : AnySet String Coord
+allCoords : AnySet Int Coord
 allCoords =
-    AnySet.fromList toString
+    AnySet.fromList toInt
         [ S1
         , S2
         , S3
@@ -155,6 +156,85 @@ toString coord =
 
         S25 ->
             "S25"
+
+
+toInt : Coord -> Int
+toInt coord =
+    case coord of
+        S1 ->
+            1
+
+        S2 ->
+            2
+
+        S3 ->
+            3
+
+        S4 ->
+            4
+
+        S5 ->
+            5
+
+        S6 ->
+            6
+
+        S7 ->
+            7
+
+        S8 ->
+            8
+
+        S9 ->
+            9
+
+        S10 ->
+            10
+
+        S11 ->
+            11
+
+        S12 ->
+            12
+
+        S13 ->
+            13
+
+        S14 ->
+            14
+
+        S15 ->
+            15
+
+        S16 ->
+            16
+
+        S17 ->
+            17
+
+        S18 ->
+            18
+
+        S19 ->
+            19
+
+        S20 ->
+            20
+
+        S21 ->
+            21
+
+        S22 ->
+            22
+
+        S23 ->
+            23
+
+        S24 ->
+            24
+
+        S25 ->
+            25
 
 
 {-| Get CSS _top_ and _left_ values for `Board` elements' view styles.

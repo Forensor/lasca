@@ -11,6 +11,7 @@ module Piece exposing
     , setRole
     , setTeam
     , team
+    , toString
     , view
     )
 
@@ -110,6 +111,13 @@ Every `Counter` is added from below.
 addCounter : Piece -> Counter -> Piece
 addCounter piece counter =
     NonEmpty.append piece (NonEmpty.singleton counter)
+
+
+toString : Piece -> String
+toString piece =
+    NonEmpty.map Counter.toString piece
+        |> NonEmpty.toList
+        |> String.join ""
 
 
 

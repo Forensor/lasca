@@ -1,4 +1,4 @@
-module Counter exposing (Counter, directions, view)
+module Counter exposing (Counter, directions, toString, view)
 
 import Dict.Any as AnyDict exposing (AnyDict)
 import Direction exposing (Direction)

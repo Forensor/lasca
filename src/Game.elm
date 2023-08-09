@@ -1,6 +1,6 @@
 module Game exposing
     ( Game
-    , defaultGame
+    , default
     , getAllPossibleCaptureSteps
     , getAllPossibleMoves
     , getMovesByCoord
@@ -23,16 +23,22 @@ import Set.Any as AnySet exposing (AnySet)
 import Team exposing (Team)
 
 
+{-| A record representing the model of a `Game`.
+
+`movementHistory` does not include the current `Fen` of the turn.
+
+-}
 type alias Game =
     { board : Board
     , turn : Team
     , possibleMoves : PossibleMoves
-    , excludedCaptures : AnySet String Coord
+    , excludedCaptures : AnySet Int Coord
+    , movementHistory : List Movement
     }
 
 
-defaultGame : Game
-defaultGame =
+default : Game
+default =
     { board = Board.default
     , turn = Team.default
     , possibleMoves =
@@ -46,7 +52,8 @@ defaultGame =
                 , { origin = Coord.S11, destination = Coord.S14 }
                 ]
             )
-    , excludedCaptures = AnySet.empty Coord.toString
+    , excludedCaptures = AnySet.empty Coord.toInt
+    , movementHistory = []
     }
 
 
@@ -297,11 +304,19 @@ makeMove game move =
                     let
                         possibleCaptureSteps : AnySet String CaptureStep
                         possibleCaptureSteps =
-                            getAllPossibleCaptureSteps game
+                            getAllPossibleCaptureSteps
+                                { game
+                                    | board = newBoard
+                                    , turn = newTurn
+                                }
 
                         possibleMoves : AnySet String Move
                         possibleMoves =
-                            getAllPossibleMoves game
+                            getAllPossibleMoves
+                                { game
+                                    | board = newBoard
+                                    , turn = newTurn
+                                }
                     in
                     if AnySet.size possibleCaptureSteps > 0 then
                         PossibleMoves.Captures possibleCaptureSteps
@@ -312,10 +327,11 @@ makeMove game move =
                     else
                         PossibleMoves.None
             in
-            { board = newBoard
-            , turn = newTurn
-            , possibleMoves = newPossibleMoves
-            , excludedCaptures = AnySet.empty Coord.toString
+            { game
+                | board = newBoard
+                , turn = newTurn
+                , possibleMoves = newPossibleMoves
+                , excludedCaptures = AnySet.empty Coord.toInt
             }
                 |> promoteLastRowsToOfficers
 
@@ -375,14 +391,14 @@ makeCaptureStep game capture =
                         }
                         capture.destination
 
-                newExcludedCaptures : AnySet String Coord
+                newExcludedCaptures : AnySet Int Coord
                 newExcludedCaptures =
                     if AnySet.size possibleFurtherCaptureSteps > 0 then
                         game.excludedCaptures
                             |> AnySet.insert capture.capturee
 
                     else
-                        AnySet.empty Coord.toString
+                        AnySet.empty Coord.toInt
 
                 newTurn : Team
                 newTurn =
@@ -423,10 +439,11 @@ makeCaptureStep game capture =
                     else
                         PossibleMoves.None
             in
-            { board = newBoard
-            , turn = newTurn
-            , possibleMoves = newPossibleMoves
-            , excludedCaptures = newExcludedCaptures
+            { game
+                | board = newBoard
+                , turn = newTurn
+                , possibleMoves = newPossibleMoves
+                , excludedCaptures = newExcludedCaptures
             }
                 |> promoteLastRowsToOfficers
 
@@ -449,9 +466,18 @@ makeMovement game movement =
     case movement of
         Movement.Capture capture ->
             makeCapture game capture
+                |> addMovementToHistory movement
 
         Movement.Move move ->
             makeMove game move
+                |> addMovementToHistory movement
+
+
+addMovementToHistory : Movement -> Game -> Game
+addMovementToHistory movement game =
+    { game
+        | movementHistory = game.movementHistory ++ [ movement ]
+    }
 
 
 promoteLastRowsToOfficers : Game -> Game

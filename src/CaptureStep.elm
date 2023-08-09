@@ -28,7 +28,7 @@ toString { origin = Coord.S1, capturee = Coord.S5, destination = Coord.S9 }
 -}
 toString : CaptureStep -> String
 toString { origin, capturee, destination } =
-    List.map (Coord.toString >> String.dropLeft 1) [ origin, capturee, destination ]
+    List.map (Coord.toInt >> String.fromInt) [ origin, capturee, destination ]
         |> String.join "-"
 
 
