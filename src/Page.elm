@@ -1,11 +1,14 @@
 module Page exposing
-    ( clickOutsideElementClassesEvent
-    , clickOutsideElementIdsEvent
-    , decodeClickOutsideElementIds
+    ( decodeTargetOutsideElementIds
+    , mouseDownOutsideElementClassesEvent
+    , mouseDownOutsideElementIdsEvent
+    , mouseUpInsideElementClassesEvent
+    , mouseUpOutsideElementClassesEvent
     , viewHeader
     , viewIf
     )
 
+import Browser.Events as BrEvts
 import Html exposing (Attribute, Html)
 import Html.Attributes as Attrs
 import Html.Events as Events
@@ -92,8 +95,8 @@ isOutsideElementIds elementIds =
         ]
 
 
-decodeClickOutsideElementIds : msg -> List String -> Decoder msg
-decodeClickOutsideElementIds msg elementIds =
+decodeTargetOutsideElementIds : msg -> List String -> Decoder msg
+decodeTargetOutsideElementIds msg elementIds =
     Decode.field "target" (isOutsideElementIds elementIds)
         |> Decode.andThen
             (\isOutside ->
@@ -107,10 +110,10 @@ decodeClickOutsideElementIds msg elementIds =
             )
 
 
-clickOutsideElementIdsEvent : msg -> List String -> Attribute msg
-clickOutsideElementIdsEvent msg elementIds =
-    Events.on "click"
-        (decodeClickOutsideElementIds
+mouseDownOutsideElementIdsEvent : msg -> List String -> Sub msg
+mouseDownOutsideElementIdsEvent msg elementIds =
+    BrEvts.onMouseDown
+        (decodeTargetOutsideElementIds
             msg
             elementIds
         )
@@ -145,8 +148,37 @@ isOutsideElementClasses elementClasses =
         ]
 
 
-decodeClickOutsideElementClasses : msg -> List String -> Decoder msg
-decodeClickOutsideElementClasses msg elementClasses =
+isInsideElementClasses : List String -> Decoder Bool
+isInsideElementClasses elementClasses =
+    Decode.oneOf
+        [ Decode.field "className" Decode.string
+            |> Decode.andThen
+                (\targetClassName ->
+                    if
+                        List.any
+                            (\targetClass ->
+                                List.member targetClass elementClasses
+                            )
+                            (String.split " " targetClassName)
+                    then
+                        Decode.succeed True
+
+                    else
+                        Decode.fail <|
+                            "Not clicking inside element with any of these classes: "
+                                ++ String.join ", " elementClasses
+                )
+        , Decode.lazy
+            (\_ ->
+                isInsideElementClasses elementClasses
+                    |> Decode.field "parentNode"
+            )
+        , Decode.succeed True
+        ]
+
+
+decodeTargetOutsideElementClasses : msg -> List String -> Decoder msg
+decodeTargetOutsideElementClasses msg elementClasses =
     Decode.field "target" (isOutsideElementClasses elementClasses)
         |> Decode.andThen
             (\isOutside ->
@@ -155,15 +187,48 @@ decodeClickOutsideElementClasses msg elementClasses =
 
                 else
                     Decode.fail <|
-                        "Not clicking outside element with any of these classes: "
+                        "Not clicking inside element with any of these classes: "
                             ++ String.join ", " elementClasses
             )
 
 
-clickOutsideElementClassesEvent : msg -> List String -> Attribute msg
-clickOutsideElementClassesEvent msg elementClasses =
-    Events.on "click"
-        (decodeClickOutsideElementClasses
+decodeTargetInsideElementClasses : msg -> List String -> Decoder msg
+decodeTargetInsideElementClasses msg elementClasses =
+    Decode.field "target" (isInsideElementClasses elementClasses)
+        |> Decode.andThen
+            (\isInside ->
+                if isInside then
+                    Decode.succeed msg
+
+                else
+                    Decode.fail <|
+                        "Not clicking inside element with any of these classes: "
+                            ++ String.join ", " elementClasses
+            )
+
+
+mouseDownOutsideElementClassesEvent : msg -> List String -> Sub msg
+mouseDownOutsideElementClassesEvent msg elementClasses =
+    BrEvts.onMouseDown
+        (decodeTargetOutsideElementClasses
+            msg
+            elementClasses
+        )
+
+
+mouseUpOutsideElementClassesEvent : msg -> List String -> Sub msg
+mouseUpOutsideElementClassesEvent msg elementClasses =
+    BrEvts.onMouseUp
+        (decodeTargetOutsideElementClasses
+            msg
+            elementClasses
+        )
+
+
+mouseUpInsideElementClassesEvent : msg -> List String -> Sub msg
+mouseUpInsideElementClassesEvent msg elementClasses =
+    BrEvts.onMouseUp
+        (decodeTargetInsideElementClasses
             msg
             elementClasses
         )

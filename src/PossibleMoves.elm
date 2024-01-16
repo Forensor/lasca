@@ -2,7 +2,7 @@ module PossibleMoves exposing (..)
 
 import Capture exposing (Capture)
 import CaptureStep exposing (CaptureStep)
-import Coord
+import Coord exposing (Coord)
 import Move exposing (Move)
 import Set.Any as AnySet exposing (AnySet)
 
@@ -30,3 +30,26 @@ default =
             , { origin = Coord.S11, destination = Coord.S14 }
             ]
         )
+
+
+filterByOriginAndDestinationCoords : Coord -> Coord -> PossibleMoves -> PossibleMoves
+filterByOriginAndDestinationCoords origin destination possibleMoves =
+    case possibleMoves of
+        Captures captures ->
+            captures
+                |> AnySet.filter
+                    (\capture ->
+                        capture.origin == origin && capture.destination == destination
+                    )
+                |> Captures
+
+        Moves moves ->
+            moves
+                |> AnySet.filter
+                    (\move ->
+                        move.origin == origin && move.destination == destination
+                    )
+                |> Moves
+
+        None ->
+            None

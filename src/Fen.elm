@@ -16,7 +16,7 @@ type Fen
 
 generateBoardPart : Board -> String
 generateBoardPart board =
-    generateBoardPartHelp board (AnySet.toList Coord.allCoords) 4
+    generateBoardPartHelp board Coord.allCoordsForFen 4
         |> String.join "/"
 
 

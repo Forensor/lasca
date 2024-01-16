@@ -4,6 +4,7 @@ module Game exposing
     , getAllPossibleCaptureSteps
     , getAllPossibleMoves
     , getMovesByCoord
+    , makeCaptureStep
     , makeMovement
     )
 

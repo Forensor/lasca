@@ -25,13 +25,13 @@ toString { origin = Coord.S1, capturee = Coord.S5, destination = Coord.S9 }
 -}
 toString : Capture -> String
 toString ( firstCaptureStep, rest ) =
-    CaptureStep.toString firstCaptureStep
-        ++ (List.map
-                (CaptureStep.toString
-                    >> String.split "-"
-                    >> List.drop 1
-                    >> String.join "-"
-                )
-                rest
-                |> String.join "-"
-           )
+    (CaptureStep.toString firstCaptureStep
+        :: List.map
+            (CaptureStep.toString
+                >> String.split "-"
+                >> List.drop 1
+                >> String.join "-"
+            )
+            rest
+    )
+        |> String.join "-"

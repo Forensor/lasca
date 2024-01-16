@@ -1,5 +1,6 @@
 module Piece exposing
-    ( Piece
+    ( DraggingState(..)
+    , Piece
     , addCounter
     , className
     , convertToOfficerByTeam
@@ -17,8 +18,11 @@ module Piece exposing
 
 import Coord exposing (Coord)
 import Counter exposing (Counter)
-import Html exposing (Html)
+import Html exposing (Attribute, Html)
 import Html.Attributes as Attrs
+import Html.Events as Events
+import Json.Decode as Decode
+import Json.Decode.Extra as Decode
 import List.NonEmpty as NonEmpty exposing (NonEmpty)
 import Orientation exposing (Orientation)
 import Role exposing (Role)
@@ -124,11 +128,23 @@ toString piece =
 -- All view related stuff is beyond here
 
 
+type DraggingState
+    = Static
+    | Dragged
+        { mouseX : Float
+        , mouseY : Float
+        }
+
+
 {-| Configuration for `Piece` related views.
 -}
-type alias Config =
+type alias Config msg =
     { pieceSize : Float
     , orientation : Orientation
+    , selectedPiece : Maybe ( Coord, DraggingState )
+    , onDragPieceEventToMsg : Coord -> { mouseX : Float, mouseY : Float } -> msg
+    , hoveredCoordToMsg : Maybe Coord -> msg
+    , shouldHaveEvents : Bool
     }
 
 
@@ -159,33 +175,128 @@ Configuration allows you to set custom `pieceSize`, which affects the size of th
 `Board`.
 
 -}
-view : Config -> Coord -> Piece -> Html msg
+view : Config msg -> Coord -> Piece -> Html msg
 view config coord piece =
     let
         { top, left } =
-            Coord.topAndLeftValues
-                { pieceSize = config.pieceSize
-                , orientation = config.orientation
-                }
-                coord
+            case config.selectedPiece of
+                Just ( coord_, draggingState ) ->
+                    case ( draggingState, coord_ == coord ) of
+                        ( Dragged { mouseX, mouseY }, True ) ->
+                            { top = mouseY - config.pieceSize / 2
+                            , left = mouseX - config.pieceSize / 2
+                            }
+
+                        _ ->
+                            Coord.topAndLeftValues
+                                { pieceSize = config.pieceSize
+                                , orientation = config.orientation
+                                }
+                                coord
+
+                Nothing ->
+                    Coord.topAndLeftValues
+                        { pieceSize = config.pieceSize
+                        , orientation = config.orientation
+                        }
+                        coord
+
+        elementPositionClass : String
+        elementPositionClass =
+            case config.selectedPiece of
+                Just ( coord_, draggingState ) ->
+                    case ( draggingState, coord_ == coord ) of
+                        ( Dragged _, True ) ->
+                            "fixed pointer-events-none"
+
+                        _ ->
+                            "absolute"
+
+                Nothing ->
+                    "absolute"
+
+        zIndexClass : List (Attribute msg)
+        zIndexClass =
+            case config.selectedPiece of
+                Just ( coord_, draggingState ) ->
+                    case ( draggingState, coord_ == coord ) of
+                        ( Dragged _, True ) ->
+                            [ Attrs.class "z-[1000]" ]
+
+                        _ ->
+                            []
+
+                Nothing ->
+                    []
+
+        mouseEvents : List (Attribute msg)
+        mouseEvents =
+            if config.shouldHaveEvents then
+                [ Events.onMouseOver <| config.hoveredCoordToMsg (Just coord)
+                , Events.onMouseLeave <| config.hoveredCoordToMsg Nothing
+                , Events.preventDefaultOn "mousedown"
+                    (Decode.field "button" Decode.int
+                        |> Decode.andThen
+                            (\mouseButtonPressed ->
+                                case mouseButtonPressed of
+                                    0 ->
+                                        Decode.succeed
+                                            (\mouseX mouseY ->
+                                                ( config.onDragPieceEventToMsg coord
+                                                    { mouseX = mouseX
+                                                    , mouseY = mouseY
+                                                    }
+                                                , True
+                                                )
+                                            )
+                                            |> Decode.andMap
+                                                (Decode.field
+                                                    "clientX"
+                                                    Decode.float
+                                                )
+                                            |> Decode.andMap
+                                                (Decode.field
+                                                    "clientY"
+                                                    Decode.float
+                                                )
+
+                                    _ ->
+                                        Decode.fail "No mousedown with left click"
+                            )
+                    )
+                ]
+
+            else
+                []
     in
     Html.node "piece"
-        [ Attrs.class className
-        , Attrs.class <| Team.className <| team piece
-        , Attrs.class "block absolute"
+        ([ Attrs.class className
+         , Attrs.class <| Team.className <| team piece
+         , Attrs.class "block cursor-pointer"
+         , Attrs.class elementPositionClass
+         , Attrs.classList
+            [ ( selectedClassName
+              , config.selectedPiece
+                    |> Maybe.map (\( coord_, _ ) -> coord_ == coord)
+                    |> Maybe.withDefault False
+              )
+            ]
 
-        {- For some reason `Html.Attributes.style` doesn't work with this, neither
-           does tailwindcss, so this is a workaround...
-        -}
-        , SvgAttrs.style <|
+         {- For some reason `Html.Attributes.style` doesn't work with this, neither
+            does tailwindcss, so this is a workaround...
+         -}
+         , SvgAttrs.style <|
             String.join " "
                 [ "top: " ++ String.fromFloat top ++ "px;"
                 , "left: " ++ String.fromFloat left ++ "px;"
                 , "height: " ++ String.fromFloat config.pieceSize ++ "px;"
                 , "width: " ++ String.fromFloat config.pieceSize ++ "px;"
                 ]
-        , Attrs.class <| Coord.toString coord
-        ]
+         , Attrs.class <| Coord.toString coord
+         ]
+            ++ zIndexClass
+            ++ mouseEvents
+        )
         (piece
             |> NonEmpty.indexedMap
                 (\index counter ->

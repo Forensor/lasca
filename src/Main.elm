@@ -171,8 +171,23 @@ update msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
+subscriptions model =
+    case model of
+        Home homeModel ->
+            Sub.none
+
+        Game gameModel ->
+            Sub.none
+
+        Rules rulesModel ->
+            Sub.none
+
+        Analysis analysisModel ->
+            Page.Analysis.subscriptions analysisModel
+                |> Sub.map AnalysisMsg
+
+        Redirect _ ->
+            Sub.none
 
 
 main : Program () Model Msg
