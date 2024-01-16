@@ -23,7 +23,7 @@ toString { origin = Coord.S1, destination = Coord.S5 }
 -}
 toString : Move -> String
 toString { origin, destination } =
-    List.map (Coord.toString >> String.dropLeft 1) [ origin, destination ]
+    List.map (Coord.toInt >> String.fromInt) [ origin, destination ]
         |> String.join "-"
 
 

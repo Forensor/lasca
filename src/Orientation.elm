@@ -1,11 +1,17 @@
 module Orientation exposing (..)
 
+{-| Which side of the board is facing you.
+
+Default `Orientation` is `Whiteside`.
+
+-}
+
 
 type Orientation
     = Whiteside
     | Blackside
 
 
-defaultOrientation : Orientation
-defaultOrientation =
+default : Orientation
+default =
     Whiteside

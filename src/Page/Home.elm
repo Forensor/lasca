@@ -11,20 +11,20 @@ import Session exposing (Session)
 
 type alias Model =
     { session : Session
-    , preferencesPanelState : Preferences.PanelState
+    , preferencesPanelIsOpen : Bool
     }
 
 
 type Msg
     = NoOp String
     | TogglePreferencesPanel
-    | SetPreferencesPanel Preferences.PanelState
+    | SetPreferencesPanelIsOpened Bool
 
 
 init : Session -> ( Model, Cmd Msg )
 init session =
     ( { session = session
-      , preferencesPanelState = Preferences.Closed
+      , preferencesPanelIsOpen = False
       }
     , Cmd.none
     )
@@ -40,30 +40,11 @@ view model =
 
 body : Model -> List (Html Msg)
 body model =
-    let
-        {- Event to handle the close of the `Preferences` dropdown if the user clicks
-           anywhere outside of it.
-
-           We do not trigger the event if the `Preferences` dropdown is invisible
-        -}
-        clickOutsidePreferencesPanelEvent : List (Attribute Msg)
-        clickOutsidePreferencesPanelEvent =
-            if model.preferencesPanelState == Preferences.Opened then
-                [ Page.clickOutsideElementIdsEvent
-                    (SetPreferencesPanel Preferences.Closed)
-                    [ Preferences.dropdownId, Preferences.gearButtonId ]
-                ]
-
-            else
-                []
-    in
     [ Html.div
-        (clickOutsidePreferencesPanelEvent
-            ++ [ Attrs.class "h-screen" ]
-        )
+        [ Attrs.class "h-screen" ]
         [ Page.viewHeader TogglePreferencesPanel
         , Page.viewIf
-            (model.preferencesPanelState == Preferences.Opened)
+            model.preferencesPanelIsOpen
             (Preferences.viewDropdown
                 { enlargeBoardSizeButtonMsg =
                     NoOp "Ignoring enlarge board size change in Home page"
@@ -120,16 +101,32 @@ update msg model =
 
         TogglePreferencesPanel ->
             let
-                newPanelState : Preferences.PanelState
-                newPanelState =
-                    case model.preferencesPanelState of
-                        Preferences.Closed ->
-                            Preferences.Opened
-
-                        Preferences.Opened ->
-                            Preferences.Closed
+                newPreferencesPanelIsOpen : Bool
+                newPreferencesPanelIsOpen =
+                    not model.preferencesPanelIsOpen
             in
-            ( { model | preferencesPanelState = newPanelState }, Cmd.none )
+            ( { model
+                | preferencesPanelIsOpen = newPreferencesPanelIsOpen
+              }
+            , Cmd.none
+            )
 
-        SetPreferencesPanel preferencesPanelState ->
-            ( { model | preferencesPanelState = preferencesPanelState }, Cmd.none )
+        SetPreferencesPanelIsOpened preferencesPanelIsOpened ->
+            ( { model
+                | preferencesPanelIsOpen = preferencesPanelIsOpened
+              }
+            , Cmd.none
+            )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ if model.preferencesPanelIsOpen then
+            Page.mouseDownOutsideElementIdsEvent
+                (SetPreferencesPanelIsOpened False)
+                [ Preferences.dropdownId, Preferences.gearButtonId ]
+
+          else
+            Sub.none
+        ]

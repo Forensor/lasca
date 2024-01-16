@@ -1,4 +1,7 @@
-module Session exposing (..)
+module Session exposing (Session, default)
+
+{-| A `Session` is data common to every section of the application.
+-}
 
 import Browser.Navigation as Nav
 import Preferences exposing (Preferences)
@@ -12,8 +15,8 @@ type alias Session =
     }
 
 
-defaultSession : Nav.Key -> Session
-defaultSession navKey =
+default : Nav.Key -> Session
+default navKey =
     { navKey = navKey
-    , preferences = Preferences.defaultPreferences
+    , preferences = Preferences.default
     }

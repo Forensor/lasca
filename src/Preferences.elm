@@ -1,4 +1,11 @@
-module Preferences exposing (..)
+module Preferences exposing
+    ( Preferences
+    , default
+    , dropdownId
+    , gearButtonId
+    , viewDropdown
+    , viewGearButton
+    )
 
 {-| User preferences for custom configuration.
 
@@ -10,26 +17,28 @@ import Html exposing (Attribute, Html)
 import Html.Attributes as Attrs
 import Html.Events as Events
 import Orientation exposing (Orientation)
-import Piece exposing (Piece)
+import Piece
 import Svg
 import Svg.Attributes as SvgAttrs
-import Team
 
 
+{-| User `Preferences` for the application.
+-}
 type alias Preferences =
-    { pieceSize : Float, orientation : Orientation }
-
-
-type PanelState
-    = Opened
-    | Closed
-
-
-defaultPreferences : Preferences
-defaultPreferences =
-    { pieceSize = Piece.defaultSize
-    , orientation = Orientation.defaultOrientation
+    { pieceSize : Float
+    , orientation : Orientation
     }
+
+
+default : Preferences
+default =
+    { pieceSize = Piece.defaultSize
+    , orientation = Orientation.default
+    }
+
+
+
+-- All view related stuff is beyond here
 
 
 icon : Html msg
@@ -71,11 +80,15 @@ viewGearButton preferencesButtonOnClickMsg =
         ]
 
 
-viewDropdown :
+type alias DropdownConfig msg =
     { enlargeBoardSizeButtonMsg : msg
     , reduceBoardSizeButtonMsg : msg
     , swapBoardOrientationMsg : msg
     }
+
+
+viewDropdown :
+    DropdownConfig msg
     -> Html msg
 viewDropdown config =
     let

@@ -6,5 +6,6 @@ const app = Elm.Main.init({
 })
 
 app.ports.play.subscribe((soundFilename: string) => {
-    new Audio(soundFilename).play()
+    const audio = new Audio(soundFilename)
+    audio.play()
 })

@@ -1,19 +1,32 @@
-module Board exposing (Board, defaultBoard, view)
+module Board exposing
+    ( Board
+    , className
+    , default
+    , moveDestinationClassName
+    , selectedSquareClassName
+    , view
+    )
+
+{-| A `Board` is a representation of the placement of the `Piece`s on a "physical board".
+-}
 
 import Coord exposing (Coord)
 import Dict.Any as AnyDict exposing (AnyDict)
 import Html exposing (Attribute, Html)
 import Html.Attributes as Attrs
 import Html.Events as Events
-import MovementType exposing (MovementType)
+import Json.Decode as Decode
+import Json.Decode.Extra as Decode
+import List.NonEmpty as NonEmpty exposing (NonEmpty)
+import Movement exposing (Movement)
+import MovementStep exposing (MovementStep)
 import Orientation exposing (Orientation)
-import Page
 import Piece exposing (Piece)
 import PossibleMoves exposing (PossibleMoves)
 import Role
 import Set.Any as AnySet exposing (AnySet)
 import Svg.Attributes as SvgAttrs
-import Team
+import Team exposing (Team)
 
 
 {-| Game position represented by an `AnyDict`.
@@ -22,27 +35,14 @@ Any `Coord` not present in the dictionary means that the square is empty.
 
 -}
 type alias Board =
-    AnyDict String Coord Piece
-
-
-type alias Config msg =
-    { onClickPieceToMsg : Coord -> msg
-    , pieceSize : Float
-    , orientation : Orientation
-    , moveDestinations : AnySet String Coord
-    , pieceSelected : Maybe Coord
-    , onClickOutsidePieceSelectedMsg : msg
-    , highlightedSquares : AnySet String Coord
-    , onClickMoveDestinationToMsg : MovementType -> msg
-    , possibleMoves : PossibleMoves
-    }
+    AnyDict Int Coord Piece
 
 
 {-| Default starting position `Board`.
 -}
-defaultBoard : Board
-defaultBoard =
-    AnyDict.fromList Coord.toString
+default : Board
+default =
+    AnyDict.fromList Coord.toInt
         [ ( Coord.S1, ( { team = Team.White, role = Role.Soldier }, [] ) )
         , ( Coord.S2, ( { team = Team.White, role = Role.Soldier }, [] ) )
         , ( Coord.S3, ( { team = Team.White, role = Role.Soldier }, [] ) )
@@ -68,6 +68,25 @@ defaultBoard =
         ]
 
 
+
+-- All view related stuff is beyond here
+
+
+{-| Configuration for `Board` related views.
+-}
+type alias Config msg =
+    { pieceSize : Float
+    , orientation : Orientation
+    , selectedPiece : Maybe ( Coord, Piece.DraggingState )
+    , possibleMoves : PossibleMoves
+    , onDragPieceEventToMsg : Coord -> { mouseX : Float, mouseY : Float } -> msg
+    , hoveredCoord : Maybe Coord
+    , hoveredCoordToMsg : Maybe Coord -> msg
+    , onClickMoveDestinationToMsg : MovementStep -> msg
+    , playingTurn : Team
+    }
+
+
 view : Config msg -> Board -> Html msg
 view config board =
     let
@@ -75,63 +94,101 @@ view config board =
         sizeByPieceSize =
             config.pieceSize * 7
 
-        clickOutsidePieceSelectedEvent : List (Attribute msg)
-        clickOutsidePieceSelectedEvent =
-            case config.pieceSelected of
-                Just _ ->
-                    [ Page.clickOutsideElementClassesEvent
-                        config.onClickOutsidePieceSelectedMsg
-                        [ Piece.className, moveDestClassName, Piece.selectedClassName ]
-                    ]
+        selectedSquareView : List (Html msg)
+        selectedSquareView =
+            case config.selectedPiece of
+                Just ( coord, _ ) ->
+                    [ viewSelectedSquare config coord ]
 
                 Nothing ->
                     []
+
+        moveDestinationsView : List (Html msg)
+        moveDestinationsView =
+            case ( config.possibleMoves, config.selectedPiece ) of
+                ( PossibleMoves.Captures captures, Just ( coord, _ ) ) ->
+                    captures
+                        |> AnySet.toList
+                        |> List.filter (.origin >> (==) coord)
+                        |> List.map (.destination >> viewMoveDestination config)
+
+                ( PossibleMoves.Moves moves, Just ( coord, _ ) ) ->
+                    moves
+                        |> AnySet.toList
+                        |> List.filter (.origin >> (==) coord)
+                        |> List.map (.destination >> viewMoveDestination config)
+
+                _ ->
+                    []
     in
     Html.node "board"
-        (clickOutsidePieceSelectedEvent
-            ++ [ Attrs.class "board block relative cursor-pointer"
-               , SvgAttrs.style <|
-                    String.join " "
-                        [ "height: " ++ String.fromFloat sizeByPieceSize ++ "px;"
-                        , "width: " ++ String.fromFloat sizeByPieceSize ++ "px;"
-                        ]
-               , Attrs.class "bg-board bg-no-repeat bg-cover rounded-[4px] shadow-lg"
-               ]
-        )
-        ((config.highlightedSquares
-            |> AnySet.toList
-            |> List.map
-                (\coord ->
-                    viewHighlightedSquare config coord
-                )
-         )
+        [ Attrs.class className
+        , Attrs.class "block relative cursor-pointer"
+        , SvgAttrs.style <|
+            String.join " "
+                [ "height: " ++ String.fromFloat sizeByPieceSize ++ "px;"
+                , "width: " ++ String.fromFloat sizeByPieceSize ++ "px;"
+                ]
+        , Attrs.class "bg-board bg-no-repeat bg-cover rounded-[4px] shadow-lg"
+        , Attrs.id playingBoardId
+        ]
+        (selectedSquareView
+            ++ moveDestinationsView
             ++ (board
                     |> AnyDict.toList
                     |> List.map
                         (\( coord, piece ) ->
                             Piece.view
-                                { clickPieceToMsg = config.onClickPieceToMsg
-                                , pieceSize = config.pieceSize
+                                { pieceSize = config.pieceSize
                                 , orientation = config.orientation
-                                , selected = Just coord == config.pieceSelected
+                                , selectedPiece = config.selectedPiece
+                                , onDragPieceEventToMsg =
+                                    config.onDragPieceEventToMsg
+                                , hoveredCoordToMsg = config.hoveredCoordToMsg
+                                , shouldHaveEvents =
+                                    config.playingTurn
+                                        == Piece.team piece
                                 }
                                 coord
                                 piece
                         )
                )
-            ++ (config.moveDestinations
-                    |> AnySet.toList
-                    |> List.map
-                        (\coord ->
-                            viewMoveDestination config coord
-                        )
-               )
         )
 
 
-moveDestClassName : String
-moveDestClassName =
+className : String
+className =
+    "board"
+
+
+playingBoardId : String
+playingBoardId =
+    "playing-board"
+
+
+moveDestinationClassName : String
+moveDestinationClassName =
     "move-dest"
+
+
+capturedSquareClassName : String
+capturedSquareClassName =
+    "capt-square"
+
+
+selectedSquareClassName : String
+selectedSquareClassName =
+    "slc-square"
+
+
+lastMoveClassName : String
+lastMoveClassName =
+    "last-move"
+
+
+ghostPieceClassName : String
+ghostPieceClassName =
+    "ghost"
 
 
 viewMoveDestination : Config msg -> Coord -> Html msg
@@ -144,24 +201,34 @@ viewMoveDestination config coord =
                 }
                 coord
 
-        maybeFilteredMoveToMake : Maybe PossibleMoves
-        maybeFilteredMoveToMake =
-            config.pieceSelected
+        backgroundBasedOnHovering : String
+        backgroundBasedOnHovering =
+            if config.hoveredCoord == Just coord then
+                "bg-[rgba(20,_85,_30,_.3)]"
+
+            else
+                "bg-[radial-gradient(rgba(20,_85,_30,_0.5)_19%,_rgba(0,_0,_0,_0)_20%)]"
+
+        maybePossibleMoveSingleton : Maybe PossibleMoves
+        maybePossibleMoveSingleton =
+            config.selectedPiece
                 |> Maybe.map
-                    (\originCoord ->
-                        PossibleMoves.filterByOriginAndDestinationCoords
-                            originCoord
-                            coord
-                            config.possibleMoves
+                    (Tuple.first
+                        >> (\originCoord ->
+                                PossibleMoves.filterByOriginAndDestinationCoords
+                                    originCoord
+                                    coord
+                                    config.possibleMoves
+                           )
                     )
 
-        maybeMovementTypeToMake : Maybe MovementType
-        maybeMovementTypeToMake =
-            case maybeFilteredMoveToMake of
+        maybeMovementStep : Maybe MovementStep
+        maybeMovementStep =
+            case maybePossibleMoveSingleton of
                 Just (PossibleMoves.Captures captures) ->
                     case AnySet.toList captures of
                         [ capture ] ->
-                            Just <| MovementType.Capture capture
+                            Just <| MovementStep.CaptureStep capture
 
                         _ ->
                             Nothing
@@ -169,7 +236,7 @@ viewMoveDestination config coord =
                 Just (PossibleMoves.Moves moves) ->
                     case AnySet.toList moves of
                         [ move ] ->
-                            Just <| MovementType.Move move
+                            Just <| MovementStep.Move move
 
                         _ ->
                             Nothing
@@ -179,37 +246,37 @@ viewMoveDestination config coord =
 
         onClickMoveDestinationEvent : List (Attribute msg)
         onClickMoveDestinationEvent =
-            case maybeMovementTypeToMake of
-                Just (MovementType.Capture capture) ->
+            case maybeMovementStep of
+                Just (MovementStep.CaptureStep capture) ->
                     [ Events.onClick <|
                         config.onClickMoveDestinationToMsg <|
-                            MovementType.Capture capture
+                            MovementStep.CaptureStep capture
                     ]
 
-                Just (MovementType.Move move) ->
+                Just (MovementStep.Move move) ->
                     [ Events.onClick <|
                         config.onClickMoveDestinationToMsg <|
-                            MovementType.Move move
+                            MovementStep.Move move
                     ]
 
                 Nothing ->
                     []
     in
     Html.node "move-dest"
-        (onClickMoveDestinationEvent
-            ++ [ Attrs.class moveDestClassName
-               , Attrs.class "block absolute"
-               , SvgAttrs.style <|
-                    String.join " "
-                        [ "top: " ++ String.fromFloat top ++ "px;"
-                        , "left: " ++ String.fromFloat left ++ "px;"
-                        , "height: " ++ String.fromFloat config.pieceSize ++ "px;"
-                        , "width: " ++ String.fromFloat config.pieceSize ++ "px;"
-                        ]
-               , Attrs.class
-                    "bg-[radial-gradient(rgba(20,_85,_30,_0.5)_19%,_rgba(0,_0,_0,_0)_20%)]"
-               , Attrs.class "hover:bg-[rgba(20,_85,_30,_.3)]"
-               ]
+        ([ Attrs.class moveDestinationClassName
+         , Attrs.class "block absolute"
+         , Events.onMouseOver <| config.hoveredCoordToMsg (Just coord)
+         , Events.onMouseLeave <| config.hoveredCoordToMsg Nothing
+         , SvgAttrs.style <|
+            String.join " "
+                [ "top: " ++ String.fromFloat top ++ "px;"
+                , "left: " ++ String.fromFloat left ++ "px;"
+                , "height: " ++ String.fromFloat config.pieceSize ++ "px;"
+                , "width: " ++ String.fromFloat config.pieceSize ++ "px;"
+                ]
+         , Attrs.class backgroundBasedOnHovering
+         ]
+            ++ onClickMoveDestinationEvent
         )
         []
 
@@ -225,7 +292,7 @@ viewCapturedSquare config coord =
                 coord
     in
     Html.node "capt-square"
-        [ Attrs.class moveDestClassName
+        [ Attrs.class capturedSquareClassName
         , Attrs.class "block absolute"
         , SvgAttrs.style <|
             String.join " "
@@ -241,27 +308,89 @@ viewCapturedSquare config coord =
         []
 
 
-viewHighlightedSquare : Config msg -> Coord -> Html msg
-viewHighlightedSquare { pieceSize, orientation } coord =
+viewSelectedSquare : Config msg -> Coord -> Html msg
+viewSelectedSquare config coord =
     let
         { top, left } =
             Coord.topAndLeftValues
-                { pieceSize = pieceSize
-                , orientation = orientation
+                { pieceSize = config.pieceSize
+                , orientation = config.orientation
                 }
                 coord
     in
-    Html.node "move-dest"
-        [ Attrs.class moveDestClassName
+    Html.node "slc-square"
+        [ Attrs.class selectedSquareClassName
         , Attrs.class "block absolute"
+        , Events.onMouseOver <| config.hoveredCoordToMsg (Just coord)
+        , Events.onMouseLeave <| config.hoveredCoordToMsg Nothing
         , SvgAttrs.style <|
             String.join " "
                 [ "top: " ++ String.fromFloat top ++ "px;"
                 , "left: " ++ String.fromFloat left ++ "px;"
-                , "height: " ++ String.fromFloat pieceSize ++ "px;"
-                , "width: " ++ String.fromFloat pieceSize ++ "px;"
+                , "height: " ++ String.fromFloat config.pieceSize ++ "px;"
+                , "width: " ++ String.fromFloat config.pieceSize ++ "px;"
                 ]
         , Attrs.class
             "bg-[rgba(20,_85,_30,_.5)]"
         ]
         []
+
+
+viewLastMoveSquare : Config msg -> Coord -> Html msg
+viewLastMoveSquare config coord =
+    let
+        { top, left } =
+            Coord.topAndLeftValues
+                { pieceSize = config.pieceSize
+                , orientation = config.orientation
+                }
+                coord
+    in
+    Html.node "last-move"
+        [ Attrs.class lastMoveClassName
+        , Attrs.class "block absolute"
+        , SvgAttrs.style <|
+            String.join " "
+                [ "top: " ++ String.fromFloat top ++ "px;"
+                , "left: " ++ String.fromFloat left ++ "px;"
+                , "height: " ++ String.fromFloat config.pieceSize ++ "px;"
+                , "width: " ++ String.fromFloat config.pieceSize ++ "px;"
+                ]
+        , Attrs.class
+            "bg-[rgba(20,_85,_30,_.5)]"
+        ]
+        []
+
+
+viewGhostPiece : Config msg -> Coord -> Piece -> Html msg
+viewGhostPiece config coord piece =
+    let
+        { top, left } =
+            Coord.topAndLeftValues
+                { pieceSize = config.pieceSize
+                , orientation = config.orientation
+                }
+                coord
+    in
+    Html.node "ghost"
+        [ Attrs.class ghostPieceClassName
+        , Attrs.class "block absolute"
+        , SvgAttrs.style <|
+            String.join " "
+                [ "top: " ++ String.fromFloat top ++ "px;"
+                , "left: " ++ String.fromFloat left ++ "px;"
+                , "height: " ++ String.fromFloat config.pieceSize ++ "px;"
+                , "width: " ++ String.fromFloat config.pieceSize ++ "px;"
+                ]
+        ]
+        [ Piece.view
+            { pieceSize = config.pieceSize
+            , orientation = config.orientation
+            , selectedPiece = config.selectedPiece
+            , onDragPieceEventToMsg = config.onDragPieceEventToMsg
+            , hoveredCoordToMsg = config.hoveredCoordToMsg
+            , shouldHaveEvents = False
+            }
+            coord
+            piece
+        ]

@@ -1,12 +1,15 @@
 module Main exposing (main)
 
+import Board exposing (Board)
 import Browser exposing (Document, UrlRequest(..))
 import Browser.Navigation as Nav
 import Html
+import Orientation exposing (Orientation)
 import Page.Analysis
 import Page.Game
 import Page.Home
 import Page.Rules
+import Piece exposing (Piece)
 import Route exposing (Route)
 import Session exposing (Session)
 import Url exposing (Url)
@@ -31,7 +34,7 @@ type Model
 
 init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url navKey =
-    changeRoute (Route.fromUrl url) (Redirect (Session.defaultSession navKey))
+    changeRoute (Route.fromUrl url) (Redirect (Session.default navKey))
 
 
 modelToSession : Model -> Session
@@ -168,8 +171,23 @@ update msg model =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
+subscriptions model =
+    case model of
+        Home homeModel ->
+            Sub.none
+
+        Game gameModel ->
+            Sub.none
+
+        Rules rulesModel ->
+            Sub.none
+
+        Analysis analysisModel ->
+            Page.Analysis.subscriptions analysisModel
+                |> Sub.map AnalysisMsg
+
+        Redirect _ ->
+            Sub.none
 
 
 main : Program () Model Msg

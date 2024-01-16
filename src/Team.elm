@@ -1,25 +1,27 @@
 module Team exposing
     ( Team(..)
     , className
-    , defaultTeam
+    , default
     , opposite
     , toString
     )
+
+{-| Module to handle `Team` related functions.
+-}
+
 
 {-| The two sides of the match.
 
 `White` always starts first.
 
 -}
-
-
 type Team
     = White
     | Black
 
 
-defaultTeam : Team
-defaultTeam =
+default : Team
+default =
     White
 
 
@@ -33,12 +35,11 @@ toString team =
             "Black"
 
 
-className : Team -> String
-className team =
-    toString team
-        |> String.toLower
+{-| Get the opposite of the passed `Team`.
 
+Works like the `not` function.
 
+-}
 opposite : Team -> Team
 opposite team =
     case team of
@@ -47,3 +48,15 @@ opposite team =
 
         Black ->
             White
+
+
+
+-- All view related stuff is beyond here
+
+
+{-| CSS _className_ used to handle Events.
+-}
+className : Team -> String
+className team =
+    toString team
+        |> String.toLower

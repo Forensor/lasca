@@ -2,15 +2,23 @@ module Page.Analysis exposing (..)
 
 import Board exposing (Board)
 import Browser exposing (Document)
+import Browser.Events as BrEvts
 import Capture exposing (Capture)
+import CaptureStep exposing (CaptureStep)
 import Coord exposing (Coord)
+import Fen
 import Game exposing (Game)
 import Html exposing (Attribute, Html)
 import Html.Attributes as Attrs
+import Json.Decode as Decode
+import Json.Decode.Extra as Decode
+import List.NonEmpty as NonEmpty exposing (NonEmpty)
 import Move exposing (Move)
-import MovementType exposing (MovementType)
+import Movement exposing (Movement)
+import MovementStep exposing (MovementStep)
 import Orientation exposing (Orientation)
 import Page
+import Pgn
 import Piece exposing (Piece)
 import PossibleMoves exposing (PossibleMoves)
 import Preferences
@@ -23,28 +31,50 @@ import Team exposing (Team)
 type alias Model =
     { session : Session
     , game : Game
-    , preferencesPanelState : Preferences.PanelState
+    , preferencesPanelIsOpen : Bool
+    , selectedPiece : Maybe ( Coord, Piece.DraggingState )
+    , hoveredCoord : Maybe Coord
+    , ongoingCaptureSteps : ( Game, List CaptureStep )
     }
 
 
 type Msg
     = NoOp String
     | TogglePreferencesPanel
-    | SetPreferencesPanel Preferences.PanelState
+    | SetPreferencesPanelIsOpened Bool
     | EnlargeBoardSize
     | ReduceBoardSize
     | SwapBoardOrientation
-    | ClickPiece Coord
-    | SetPieceSelected (Maybe Coord)
-    | MakeMove MovementType
     | ReproduceSound String
+      -- Mouse position relative to `Board` element
+    | DragPiece
+        Coord
+        { mouseX : Float
+        , mouseY : Float
+        }
+    | DropPiece
+        Coord
+        { mouseX : Float
+        , mouseY : Float
+        }
+    | GotMouseCoords
+        { mouseX : Float
+        , mouseY : Float
+        }
+      ---------------------------------------------
+    | SetSelectedPiece (Maybe ( Coord, Piece.DraggingState ))
+    | SetHoveredCoord (Maybe Coord)
+    | MakeMovementStep MovementStep
 
 
 init : Session -> ( Model, Cmd Msg )
 init session =
     ( { session = session
-      , game = Game.defaultGame
-      , preferencesPanelState = Preferences.Closed
+      , game = Game.default
+      , preferencesPanelIsOpen = False
+      , selectedPiece = Nothing
+      , hoveredCoord = Nothing
+      , ongoingCaptureSteps = ( Game.default, [] )
       }
     , Cmd.none
     )
@@ -60,30 +90,11 @@ view model =
 
 body : Model -> List (Html Msg)
 body model =
-    let
-        {- Event to handle the close of the `Preferences` dropdown if the user clicks
-           anywhere outside of it.
-
-           We do not trigger the event if the `Preferences` dropdown is invisible
-        -}
-        clickOutsidePreferencesPanelEvent : List (Attribute Msg)
-        clickOutsidePreferencesPanelEvent =
-            if model.preferencesPanelState == Preferences.Opened then
-                [ Page.clickOutsideElementIdsEvent
-                    (SetPreferencesPanel Preferences.Closed)
-                    [ Preferences.dropdownId, Preferences.gearButtonId ]
-                ]
-
-            else
-                []
-    in
     [ Html.div
-        (clickOutsidePreferencesPanelEvent
-            ++ [ Attrs.class "h-screen" ]
-        )
+        [ Attrs.class "h-screen" ]
         [ Page.viewHeader TogglePreferencesPanel
         , Page.viewIf
-            (model.preferencesPanelState == Preferences.Opened)
+            model.preferencesPanelIsOpen
             (Preferences.viewDropdown
                 { enlargeBoardSizeButtonMsg = EnlargeBoardSize
                 , reduceBoardSizeButtonMsg = ReduceBoardSize
@@ -103,134 +114,47 @@ viewContent model =
 
 viewAnalysisPanel : Model -> Html Msg
 viewAnalysisPanel model =
-    let
-        moveDestinations : AnySet String Coord
-        moveDestinations =
-            case model.game.pieceSelected of
-                Just coord ->
-                    Game.getMoveDestinationCoordsByCoord model.game coord
-
-                Nothing ->
-                    AnySet.empty Coord.toString
-
-        highlightedSquares : AnySet String Coord
-        highlightedSquares =
-            case model.game.pieceSelected of
-                Just coord ->
-                    AnySet.fromList Coord.toString [ coord ]
-
-                Nothing ->
-                    AnySet.empty Coord.toString
-    in
     Html.main_ [ Attrs.class "flex flex-col gap-[20px]" ]
         [ Board.view
             { pieceSize = model.session.preferences.pieceSize
             , orientation = model.session.preferences.orientation
-            , onClickPieceToMsg = ClickPiece
-            , moveDestinations =
-                moveDestinations
-            , pieceSelected = model.game.pieceSelected
-            , onClickOutsidePieceSelectedMsg = SetPieceSelected Nothing
-            , highlightedSquares = highlightedSquares
-            , onClickMoveDestinationToMsg = MakeMove
+            , selectedPiece = model.selectedPiece
             , possibleMoves = model.game.possibleMoves
+            , onDragPieceEventToMsg = DragPiece
+            , hoveredCoord = model.hoveredCoord
+            , hoveredCoordToMsg = SetHoveredCoord
+            , onClickMoveDestinationToMsg = MakeMovementStep
+            , playingTurn = model.game.turn
             }
             model.game.board
-        , viewGameState model
+        , Html.text <| Fen.toString <| Fen.fromGame model.game
         ]
-
-
-viewGameState : Model -> Html Msg
-viewGameState model =
-    let
-        backgroundAndColorClassesBasedOnGameState : Attribute Msg
-        backgroundAndColorClassesBasedOnGameState =
-            case model.game.state of
-                Game.Init ->
-                    case model.game.turn of
-                        Team.White ->
-                            Attrs.class "bg-white"
-
-                        Team.Black ->
-                            Attrs.class "bg-[#0A0A0A] text-white"
-
-                Game.Ongoing ->
-                    case model.game.turn of
-                        Team.White ->
-                            Attrs.class "bg-white"
-
-                        Team.Black ->
-                            Attrs.class "bg-[#0A0A0A] text-white"
-
-                Game.NoPiecesLeft team ->
-                    case Team.opposite team of
-                        Team.White ->
-                            Attrs.class "bg-white"
-
-                        Team.Black ->
-                            Attrs.class "bg-[#0A0A0A] text-white"
-
-                Game.NoPossibleMoves team ->
-                    case Team.opposite team of
-                        Team.White ->
-                            Attrs.class "bg-white"
-
-                        Team.Black ->
-                            Attrs.class "bg-[#0A0A0A] text-white"
-    in
-    Html.div
-        [ Attrs.class "rounded-[4px] shadow-lg text-[20px] p-[10px] select-none"
-        , Attrs.class "w-[150px] text-center"
-        , backgroundAndColorClassesBasedOnGameState
-        ]
-        (case model.game.state of
-            Game.Init ->
-                [ Html.b []
-                    [ Html.text <| Team.toString model.game.turn ]
-                , Html.text "'s turn"
-                ]
-
-            Game.Ongoing ->
-                [ Html.b []
-                    [ Html.text <| Team.toString model.game.turn ]
-                , Html.text "'s turn"
-                ]
-
-            Game.NoPiecesLeft _ ->
-                [ Html.b []
-                    [ Html.text <| Team.toString <| Team.opposite model.game.turn ]
-                , Html.text " wins!"
-                ]
-
-            Game.NoPossibleMoves _ ->
-                [ Html.b []
-                    [ Html.text <| Team.toString <| Team.opposite model.game.turn ]
-                , Html.text " wins!"
-                ]
-        )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
+    case Debug.log "msg" msg of
         NoOp _ ->
             ( model, Cmd.none )
 
         TogglePreferencesPanel ->
             let
-                newPanelState : Preferences.PanelState
-                newPanelState =
-                    case model.preferencesPanelState of
-                        Preferences.Closed ->
-                            Preferences.Opened
-
-                        Preferences.Opened ->
-                            Preferences.Closed
+                newPreferencesPanelIsOpen : Bool
+                newPreferencesPanelIsOpen =
+                    not model.preferencesPanelIsOpen
             in
-            ( { model | preferencesPanelState = newPanelState }, Cmd.none )
+            ( { model
+                | preferencesPanelIsOpen = newPreferencesPanelIsOpen
+              }
+            , Cmd.none
+            )
 
-        SetPreferencesPanel preferencesPanelState ->
-            ( { model | preferencesPanelState = preferencesPanelState }, Cmd.none )
+        SetPreferencesPanelIsOpened preferencesPanelIsOpen ->
+            ( { model
+                | preferencesPanelIsOpen = preferencesPanelIsOpen
+              }
+            , Cmd.none
+            )
 
         EnlargeBoardSize ->
             let
@@ -317,57 +241,237 @@ update msg model =
             , Cmd.none
             )
 
-        ClickPiece coord ->
-            let
-                { game } =
-                    model
-
-                newPieceSelected : Maybe Coord
-                newPieceSelected =
-                    if Just coord == game.pieceSelected then
-                        Nothing
-
-                    else
-                        Just coord
-            in
-            ( { model
-                | game =
-                    { game
-                        | pieceSelected = newPieceSelected
-                    }
-              }
-            , Cmd.none
-            )
-
-        SetPieceSelected pieceSelected ->
-            let
-                { game } =
-                    model
-            in
-            ( { model
-                | game =
-                    { game
-                        | pieceSelected = pieceSelected
-                    }
-              }
-            , Cmd.none
-            )
-
-        MakeMove movementType ->
-            let
-                { game } =
-                    model
-            in
-            case movementType of
-                MovementType.Capture capture ->
-                    ( { model | game = Game.makeCapture game capture }
-                    , Sound.play Capture.soundFilename
-                    )
-
-                MovementType.Move move ->
-                    ( { model | game = Game.makeMove game move }
-                    , Sound.play Move.soundFilename
-                    )
-
         ReproduceSound soundFilename ->
             ( model, Sound.play soundFilename )
+
+        DragPiece coord mouseCoords ->
+            ( { model
+                | selectedPiece =
+                    Just
+                        ( coord
+                        , Piece.Dragged mouseCoords
+                        )
+              }
+            , Cmd.none
+            )
+
+        DropPiece coord mouseCoords ->
+            let
+                newSelectedPiece : Maybe ( Coord, Piece.DraggingState )
+                newSelectedPiece =
+                    if model.hoveredCoord == Just coord then
+                        Just ( coord, Piece.Static )
+
+                    else
+                        Nothing
+
+                maybePossibleMoveSingleton : Maybe PossibleMoves
+                maybePossibleMoveSingleton =
+                    Maybe.map2
+                        (\( originCoord, _ ) destinationCoord ->
+                            PossibleMoves.filterByOriginAndDestinationCoords
+                                originCoord
+                                destinationCoord
+                                model.game.possibleMoves
+                        )
+                        model.selectedPiece
+                        model.hoveredCoord
+
+                maybeMovementStep : Maybe MovementStep
+                maybeMovementStep =
+                    case maybePossibleMoveSingleton of
+                        Just (PossibleMoves.Captures captures) ->
+                            case AnySet.toList captures of
+                                [ capture ] ->
+                                    Just <| MovementStep.CaptureStep capture
+
+                                _ ->
+                                    Nothing
+
+                        Just (PossibleMoves.Moves moves) ->
+                            case AnySet.toList moves of
+                                [ move ] ->
+                                    Just <| MovementStep.Move move
+
+                                _ ->
+                                    Nothing
+
+                        _ ->
+                            Nothing
+            in
+            case maybeMovementStep of
+                Just movementStep ->
+                    update (MakeMovementStep movementStep) model
+
+                Nothing ->
+                    ( { model
+                        | selectedPiece = newSelectedPiece
+                      }
+                    , Cmd.none
+                    )
+
+        GotMouseCoords mouseCoords ->
+            ( { model
+                | selectedPiece =
+                    model.selectedPiece
+                        |> Maybe.map
+                            (\( coord, draggingState ) ->
+                                case draggingState of
+                                    Piece.Static ->
+                                        ( coord
+                                        , Piece.Static
+                                        )
+
+                                    Piece.Dragged _ ->
+                                        ( coord
+                                        , Piece.Dragged mouseCoords
+                                        )
+                            )
+              }
+            , Cmd.none
+            )
+
+        SetSelectedPiece selectedPiece ->
+            ( { model
+                | selectedPiece = selectedPiece
+              }
+            , Cmd.none
+            )
+
+        SetHoveredCoord maybeCoord ->
+            ( { model | hoveredCoord = maybeCoord }, Cmd.none )
+
+        MakeMovementStep movementStep ->
+            let
+                newGame : Game
+                newGame =
+                    case movementStep of
+                        MovementStep.Move move ->
+                            Game.makeMovement model.game (Movement.Move move)
+
+                        MovementStep.CaptureStep captureStep ->
+                            let
+                                gameWithCaptureStepDone : Game
+                                gameWithCaptureStepDone =
+                                    Game.makeCaptureStep model.game captureStep
+                            in
+                            if gameWithCaptureStepDone.turn == model.game.turn then
+                                gameWithCaptureStepDone
+
+                            else
+                                model.ongoingCaptureSteps
+                                    |> (\( gameBeforeFirstCaptureStep, captureSteps ) ->
+                                            NonEmpty.fromList
+                                                (captureSteps
+                                                    ++ [ captureStep ]
+                                                )
+                                                |> Maybe.map
+                                                    (\nonEmptyCaptureSteps ->
+                                                        Game.makeMovement
+                                                            gameBeforeFirstCaptureStep
+                                                            (Movement.Capture
+                                                                nonEmptyCaptureSteps
+                                                            )
+                                                    )
+                                                |> Maybe.withDefault
+                                                    gameBeforeFirstCaptureStep
+                                       )
+
+                newSelectedPiece : Maybe ( Coord, Piece.DraggingState )
+                newSelectedPiece =
+                    case movementStep of
+                        MovementStep.Move _ ->
+                            Nothing
+
+                        MovementStep.CaptureStep captureStep ->
+                            if newGame.turn == model.game.turn then
+                                Just ( captureStep.destination, Piece.Static )
+
+                            else
+                                Nothing
+
+                newOngoingCaptureSteps : ( Game, List CaptureStep )
+                newOngoingCaptureSteps =
+                    case movementStep of
+                        MovementStep.Move _ ->
+                            ( newGame, [] )
+
+                        MovementStep.CaptureStep captureStep ->
+                            if newGame.turn == model.game.turn then
+                                ( Tuple.first model.ongoingCaptureSteps
+                                , Tuple.second model.ongoingCaptureSteps
+                                    ++ [ captureStep ]
+                                )
+
+                            else
+                                ( newGame, [] )
+
+                playSoundCmd : Cmd msg
+                playSoundCmd =
+                    case movementStep of
+                        MovementStep.Move _ ->
+                            Sound.play Move.soundFilename
+
+                        MovementStep.CaptureStep captureStep ->
+                            Sound.play CaptureStep.soundFilename
+            in
+            ( { model
+                | game = newGame
+                , selectedPiece = newSelectedPiece
+                , ongoingCaptureSteps = newOngoingCaptureSteps
+              }
+            , playSoundCmd
+            )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        ((-- Get mouse coords when dragging a `Piece` and drop it when you mouseup
+          case model.selectedPiece of
+            Just ( coord, Piece.Dragged { mouseX, mouseY } ) ->
+                [ BrEvts.onMouseMove
+                    (Decode.succeed
+                        (\mouseX_ mouseY_ ->
+                            GotMouseCoords
+                                { mouseX = mouseX_
+                                , mouseY = mouseY_
+                                }
+                        )
+                        |> Decode.andMap (Decode.field "clientX" Decode.float)
+                        |> Decode.andMap (Decode.field "clientY" Decode.float)
+                    )
+                , BrEvts.onMouseUp
+                    (Decode.succeed
+                        (DropPiece coord
+                            { mouseX = mouseX
+                            , mouseY = mouseY
+                            }
+                        )
+                    )
+                ]
+
+            _ ->
+                [ Sub.none ]
+         )
+            ++ (-- Unselect piece when clicking outside
+                case model.selectedPiece of
+                    Just _ ->
+                        [ Page.mouseDownOutsideElementClassesEvent
+                            (SetSelectedPiece Nothing)
+                            [ Piece.className, Board.moveDestinationClassName ]
+                        ]
+
+                    _ ->
+                        [ Sub.none ]
+               )
+            ++ [ -- Close preferences panel when clicking outside
+                 if model.preferencesPanelIsOpen then
+                    Page.mouseDownOutsideElementIdsEvent
+                        (SetPreferencesPanelIsOpened False)
+                        [ Preferences.dropdownId, Preferences.gearButtonId ]
+
+                 else
+                    Sub.none
+               ]
+        )
